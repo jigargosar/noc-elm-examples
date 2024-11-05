@@ -1,5 +1,6 @@
 module Main exposing (..)
 
+import Browser
 import Html exposing (..)
 import Html.Attributes as HA exposing (style)
 import Random exposing (Generator)
@@ -8,6 +9,27 @@ import Svg.Attributes as SA
 
 
 main =
+    Browser.element
+        { init = init
+        , subscriptions = subscriptions
+        , update = update
+        , view = view
+        }
+
+
+init () =
+    ( {}, Cmd.none )
+
+
+subscriptions _ =
+    Sub.none
+
+
+update msg model =
+    ( model, Cmd.none )
+
+
+view _ =
     Svg.svg
         [ SA.viewBox "-250 -250 500 500"
         , style "width" "500"
