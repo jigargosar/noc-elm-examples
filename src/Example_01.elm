@@ -3,6 +3,7 @@ module Example_01 exposing (..)
 import Browser
 import Html exposing (..)
 import Html.Attributes as HA exposing (style)
+import List.Extra
 import Random exposing (Generator)
 import Svg
 import Svg.Attributes as SA
@@ -45,7 +46,7 @@ viewSample =
         --, style "shape-rendering" "crispEdges"
         --, style "shape-rendering" "optimizeSpeed"
         ]
-        (randomWalkerPoints 2000
+        (randomWalkerPoints 100
             |> stepWithInitialSeed 1
             |> List.map viewPoint
         )
@@ -57,7 +58,7 @@ type alias Config =
 
 ic : Config
 ic =
-    { radius = 5, scale = (5 * 1.5), opacity = 0.3 }
+    { radius = 5, scale = 5 * 1.5, opacity = 0.3 }
 
 
 
@@ -75,28 +76,15 @@ ic =
 
 randomWalkerPoints : Int -> Generator (List Point)
 randomWalkerPoints ct =
-    let
-        gen =
-            Random.list ct randomDirVec
-                |> Random.map offsetsToPoints
-    in
-    gen
+    Random.list ct randomDirVec
+        |> Random.map (offsetsToPoints)
 
 
 offsetsToPoints : List Point -> List Point
 offsetsToPoints offsets =
-    List.foldl
-        (\offset ( prevPoint, acc ) ->
-            let
-                newPoint =
-                    add2 prevPoint (vecScale ic.scale offset)
-            in
-            ( newPoint, newPoint :: acc )
-        )
-        ( ( 0, 0 ), [] )
-        offsets
-        |> Tuple.second
-        |> List.reverse
+    offsets
+        |> List.Extra.scanl add2 ( 0, 0 )
+        |> List.map (vecScale ic.scale)
 
 
 randomDirVec : Generator Point
