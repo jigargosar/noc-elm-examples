@@ -45,53 +45,71 @@ viewSample1 =
         --, style "shape-rendering" "crispEdges"
         --, style "shape-rendering" "optimizeSpeed"
         ]
-        (randomWalkerPoints |> List.map viewPoint)
+        (randomWalkerPoints 2000
+            |> stepWithInitialSeed 1
+            |> List.map viewPoint
+        )
 
 
-pointDiameter =
-    4
+type alias Config =
+    { r : Float, s : Float, o : Float }
 
 
-pointRadius =
-    pointDiameter / 2
+ic =
+    Config 5 (5 * 1.5) 0.3
 
 
-randomWalkerPoints : List Point
-randomWalkerPoints =
+
+--pointRadius =
+--    5
+--
+--
+--pointScale =
+--    pointRadius * 1.5
+--
+--
+--pointOpacity =
+--    0.3
+
+
+randomWalkerPoints : Int -> Generator (List Point)
+randomWalkerPoints ct =
     let
-        randomDirVec : Generator Point
-        randomDirVec =
-            Random.uniform ( 1, 0 )
-                [ ( 0, 1 )
-                , ( 0, -1 )
-                , ( -1, 0 )
-
-                --, ( -1, 1 )
-                --, ( 1, -1 )
-                --, ( 1, 1 )
-                --, ( -1, -1 )
-                ]
-
-        offsetsToPoints : List Point -> List Point
-        offsetsToPoints offsets =
-            List.foldl
-                (\offset ( prevPoint, acc ) ->
-                    let
-                        newPoint =
-                            add2 prevPoint (vecScale pointDiameter offset)
-                    in
-                    ( newPoint, newPoint :: acc )
-                )
-                ( ( 0, 0 ), [] )
-                offsets
-                |> Tuple.second
-                |> List.reverse
-
         gen =
-            Random.list 2000 randomDirVec
+            Random.list ct randomDirVec
                 |> Random.map offsetsToPoints
     in
-    stepWithInitialSeed gen 1
+    gen
+
+
+offsetsToPoints : List Point -> List Point
+offsetsToPoints offsets =
+    List.foldl
+        (\offset ( prevPoint, acc ) ->
+            let
+                newPoint =
+                    add2 prevPoint (vecScale ic.s offset)
+            in
+            ( newPoint, newPoint :: acc )
+        )
+        ( ( 0, 0 ), [] )
+        offsets
+        |> Tuple.second
+        |> List.reverse
+
+
+randomDirVec : Generator Point
+randomDirVec =
+    Random.uniform ( 1, 0 )
+        [ ( 0, 1 )
+        , ( 0, -1 )
+        , ( -1, 0 )
+
+        --, ( -1, 1 )
+        --, ( 1, -1 )
+        --, ( 1, 1 )
+        --, ( -1, -1 )
+        ]
 
 
 
@@ -137,16 +155,20 @@ randomWalkerPoints =
 
 viewPoint ( x, y ) =
     Svg.circle
-        [ SA.r (String.fromFloat pointRadius)
+        [ SA.r (String.fromFloat ic.r)
         , translate ( x, y )
         , style "fill" "none"
         , style "fill" "#fff"
 
         --, style "stroke" "#FFF"
         --, style "stroke-width" (String.fromFloat pointRadius)
-        , style "opacity" "0.5"
+        , opacity ic.o
         ]
         []
+
+
+opacity n =
+    style "opacity" (String.fromFloat n)
 
 
 px f =
@@ -157,7 +179,7 @@ translate ( x, y ) =
     style "translate" (px x ++ " " ++ px y)
 
 
-stepWithInitialSeed gen seed =
+stepWithInitialSeed seed gen =
     Random.step gen (Random.initialSeed seed) |> Tuple.first
 
 
