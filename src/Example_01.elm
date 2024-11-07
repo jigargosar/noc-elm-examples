@@ -55,8 +55,9 @@ type alias Config =
     { radius : Float, scale : Float, opacity : Float }
 
 
+ic : Config
 ic =
-    Config 5 (5 * 1.5) 0.3
+    { radius = 5, scale = (5 * 1.5), opacity = 0.3 }
 
 
 
