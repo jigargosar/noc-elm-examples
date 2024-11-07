@@ -30,10 +30,10 @@ update msg model =
 
 
 view _ =
-    viewSample1
+    viewSample
 
 
-viewSample1 =
+viewSample =
     Svg.svg
         [ viewBoxCentered (tupleRepeat 500)
         , style "width" "500"
