@@ -52,7 +52,7 @@ viewSample1 =
 
 
 type alias Config =
-    { r : Float, s : Float, o : Float }
+    { radius : Float, scale : Float, opacity : Float }
 
 
 ic =
@@ -88,7 +88,7 @@ offsetsToPoints offsets =
         (\offset ( prevPoint, acc ) ->
             let
                 newPoint =
-                    add2 prevPoint (vecScale ic.s offset)
+                    add2 prevPoint (vecScale ic.scale offset)
             in
             ( newPoint, newPoint :: acc )
         )
@@ -155,14 +155,14 @@ randomDirVec =
 
 viewPoint ( x, y ) =
     Svg.circle
-        [ SA.r (String.fromFloat ic.r)
+        [ SA.r (String.fromFloat ic.radius)
         , translate ( x, y )
         , style "fill" "none"
         , style "fill" "#fff"
 
         --, style "stroke" "#FFF"
         --, style "stroke-width" (String.fromFloat pointRadius)
-        , opacity ic.o
+        , opacity ic.opacity
         ]
         []
 
