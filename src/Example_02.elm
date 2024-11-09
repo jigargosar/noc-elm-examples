@@ -63,10 +63,56 @@ view model =
         --, style "shape-rendering" "crispEdges"
         --, style "shape-rendering" "optimizeSpeed"
         ]
-        (randomWalkerPoints model.ticks
-            |> stepWithInitialSeed ic.seed
-            |> List.map viewPoint
-        )
+        {- (randomWalkerPoints model.ticks
+               |> stepWithInitialSeed ic.seed
+               |> List.map viewPoint
+           )
+        -}
+        viewBars
+
+
+bars =
+    [ 21
+    , 24
+    , 24
+    , 24
+    , 24
+    , 75
+    , 36
+    , 100
+    , 20
+    , 75
+    , 36
+    , 100
+    , 20
+    , 75
+    , 36
+    , 100
+    , 20
+    , 75
+    , 36
+    , 100
+    , 20
+    ]
+    |> List.take 18
+
+
+viewBars =
+    bars |> List.indexedMap viewBar
+
+
+viewBar i n =
+    Svg.rect
+        [ SA.width "25"
+
+        --, SA.height (px n)
+        , style "height" (px n)
+        , translate ( toFloat i * 25 - 220, 220 - n )
+        , style "fill" "#000"
+        , style "stroke" "#fff"
+        , style "stroke-width" "2px"
+        ]
+        []
 
 
 type alias Config =
