@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "parcel src/*.html"
+    "start": "parcel --no-cache src/index.html"
   },
   "keywords": [],
   "author": "",
