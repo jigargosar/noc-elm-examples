@@ -100,17 +100,21 @@ bars =
 viewBars =
     bars |> List.indexedMap viewBar
 
+width = 500
+height = 500
+rectCount = 20
+rectWidth = width / rectCount
+
 
 viewBar i n =
     Svg.rect
-        [ SA.width "25"
+        [ SA.width (px rectWidth)
 
-        --, SA.height (px n)
-        , style "height" (px n)
-        , translate ( toFloat i * 25 - 220, 220 - n )
+        , SA.height (px n)
+        , translate ( toFloat i * rectWidth - (width / 2), (height / 2) - n )
         , style "fill" "#000"
         , style "stroke" "#fff"
-        , style "stroke-width" "2px"
+        , style "stroke-width" "2"
         ]
         []
 
