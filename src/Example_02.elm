@@ -72,21 +72,20 @@ view model =
 
 
 bars =
-    [ 21
-    , 24
-    , 24
-    , 24
+    [121
     , 24
     , 75
+    , 36
     , 36
     , 100
     , 20
-    , 75
-    , 36
+    , 100
     , 100
     , 20
     , 75
-    , 36
+    , 100
+    , 20
+    , 75
     , 100
     , 20
     , 75
@@ -94,22 +93,32 @@ bars =
     , 100
     , 20
     ]
-    |> List.take 18
+        |> List.take rectCount
 
 
 viewBars =
     bars |> List.indexedMap viewBar
 
-width = 500
-height = 500
-rectCount = 20
-rectWidth = width / rectCount
+
+width =
+    500
+
+
+height =
+    500
+
+
+rectCount =
+    20
+
+
+rectWidth =
+    width / rectCount
 
 
 viewBar i n =
     Svg.rect
         [ SA.width (px rectWidth)
-
         , SA.height (px n)
         , translate ( toFloat i * rectWidth - (width / 2), (height / 2) - n )
         , style "fill" "#000"
