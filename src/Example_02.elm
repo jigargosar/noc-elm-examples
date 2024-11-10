@@ -32,7 +32,7 @@ init () =
         initialConfig : Config
         initialConfig =
             { seed = 16
-            , totalBars = 20
+            , totalBars = 80
             , width = 500
             , height = 500
             }
@@ -60,7 +60,7 @@ subscriptions model =
         Sub.none
 
     else
-        Time.every 10 (always OnTick)
+        Time.every (1000 / 60) (always OnTick)
 
 
 update : Msg -> Model -> ( Model, Cmd msg )
@@ -69,7 +69,7 @@ update msg model =
         OnTick ->
             let
                 scaledElapsedTicks =
-                    model.config.totalBars // 2
+                    round (toFloat model.config.totalBars * 0.75)
             in
             ( { model | ticks = model.ticks + scaledElapsedTicks }, Cmd.none )
 
