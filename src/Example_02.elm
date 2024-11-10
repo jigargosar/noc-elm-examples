@@ -51,12 +51,12 @@ subscriptions model =
             model.config
 
         maxFreq =
-            round (c.height / 2)
+            round (c.height * 0.75)
 
         surpassedMaxFreq ( _, freq ) =
             freq > maxFreq
     in
-    if barFrequencies model |> List.any surpassedMaxFreq then
+    if frequencies model |> List.any surpassedMaxFreq then
         Sub.none
 
     else
@@ -89,12 +89,12 @@ view model =
         , style "stroke" "none"
         , style "shape-rendering" "geometric-precision"
         ]
-        (barFrequencies model
+        (frequencies model
             |> List.map (curry (viewBar c))
         )
 
 
-barFrequencies model =
+frequencies model =
     let
         c =
             model.config
