@@ -27,7 +27,7 @@ type alias Model =
 
 init : () -> ( Model, Cmd msg )
 init () =
-    ( Model 0, Cmd.none )
+    ( Model 850, Cmd.none )
 
 
 type Msg
@@ -36,7 +36,7 @@ type Msg
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    if model.ticks >= ic.limit then
+    if barHeightLimitReached model.ticks then
         Sub.none
 
     else
@@ -65,9 +65,19 @@ view model =
         , style "stroke" "none"
         , style "shape-rendering" "geometric-precision"
         ]
-        (stepWithInitialSeed ic.seed (randomBars (5 * model.ticks))
+        (barFrequencies model.ticks
             |> List.map (curry viewBar)
         )
+
+
+barHeightLimitReached ticks =
+    barFrequencies ticks |> List.any maxBarFreqReached
+
+
+barFrequencies ticks =
+    (ic.ticksScale * ticks)
+        |> randomBars
+        |> stepWithInitialSeed ic.seed
 
 
 randomBarIndex =
@@ -81,41 +91,52 @@ randomBars ct =
 
 type alias Config =
     { seed : Int
-    , limit : Int
     , rectCount : Int
     , width : Float
     , height : Float
-
-    --, radius : Float
-    --, scale : Float
-    --, opacity : Float
+    , ticksScale : Int
     }
 
 
 ic : Config
 ic =
     { seed = 16
-    , limit = 2000
-    , rectCount = 20
+    , rectCount = 80
     , width = 500
     , height = 500
-
-    --, radius = 5
-    --, scale = 5 * 1.5
-    --, opacity = 0.2
+    , ticksScale = 5
     }
 
 
+maxBarFreqReached : ( a, Int ) -> Bool
+maxBarFreqReached ( _, freq ) =
+    freq > maxBarFreq
+
+
+maxBarFreq : Int
+maxBarFreq =
+    round (ic.height / 2)
+
+
+barY : Int -> Float
+barY freq =
+    (ic.height / 2) - toFloat freq
+
+
+barX idx =
+    toFloat idx * barWidth ic - (ic.width / 2)
+
+
 barWidth c =
-    ic.width / toFloat c.rectCount
+    c.width / toFloat c.rectCount
 
 
 viewBar : Int -> Int -> Svg.Svg msg
-viewBar i n =
+viewBar idx freq =
     Svg.rect
         [ SA.width (px (barWidth ic))
-        , SA.height (px (toFloat n))
-        , translate ( toFloat i * barWidth ic - (ic.width / 2), (ic.height / 2) - toFloat n )
+        , SA.height (px (toFloat freq))
+        , translate ( barX idx, barY freq )
         , style "fill" "#000"
         , style "stroke" "#fff"
         , style "stroke-width" "2"
