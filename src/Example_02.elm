@@ -22,12 +22,22 @@ main =
 
 type alias Model =
     { ticks : Int
+    , config : Config
     }
 
 
 init : () -> ( Model, Cmd msg )
 init () =
-    ( Model 850, Cmd.none )
+    let
+        initialConfig : Config
+        initialConfig =
+            { seed = 16
+            , totalBars = 80
+            , width = 500
+            , height = 500
+            }
+    in
+    ( Model 850 initialConfig, Cmd.none )
 
 
 type Msg
@@ -36,11 +46,21 @@ type Msg
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    if barHeightLimitReached model.ticks then
+    let
+        c =
+            model.config
+
+        frequencies =
+            barFrequencies model
+
+        maxFreq =
+            round (c.height / 2)
+    in
+    if frequencies |> List.any (\( _, freq ) -> freq > maxFreq) then
         Sub.none
 
     else
-        ticksPerSecond 60 OnTick
+        ticksPerSecond (5 * 60) OnTick
 
 
 ticksPerSecond n msg =
@@ -56,92 +76,77 @@ update msg model =
 
 view : Model -> Html msg
 view model =
+    let
+        c =
+            model.config
+    in
     Svg.svg
-        [ viewBoxCentered (tupleRepeat ic.width)
-        , style "width" (px ic.width)
-        , style "height" (px ic.height)
+        [ viewBoxCentered (tupleRepeat c.width)
+        , style "width" (px c.width)
+        , style "height" (px c.height)
         , style "background" "#111"
         , style "fill" "none"
         , style "stroke" "none"
         , style "shape-rendering" "geometric-precision"
         ]
-        (barFrequencies model.ticks
-            |> List.map (curry viewBar)
+        (barFrequencies model
+            |> List.map (curry (viewBar c))
         )
 
 
-barHeightLimitReached ticks =
-    barFrequencies ticks |> List.any maxBarFreqReached
+barFrequencies model =
+    let
+        c =
+            model.config
 
-
-barFrequencies ticks =
-    (ic.ticksScale * ticks)
-        |> randomBars
-        |> stepWithInitialSeed ic.seed
-
-
-randomBarIndex =
-    Random.int 0 (ic.rectCount - 1)
-
-
-randomBars ct =
-    Random.list ct randomBarIndex
+        randomIdx =
+            Random.int 0 (c.totalBars - 1)
+    in
+    (Random.list model.ticks randomIdx
         |> Random.map List.Extra.frequencies
+    )
+        |> stepWithInitialSeed c.seed
 
 
 type alias Config =
     { seed : Int
-    , rectCount : Int
+    , totalBars : Int
     , width : Float
     , height : Float
-    , ticksScale : Int
     }
 
 
-ic : Config
-ic =
-    { seed = 16
-    , rectCount = 80
-    , width = 500
-    , height = 500
-    , ticksScale = 5
-    }
+barY c freq =
+    (c.height / 2) - toFloat freq
 
 
-maxBarFreqReached : ( a, Int ) -> Bool
-maxBarFreqReached ( _, freq ) =
-    freq > maxBarFreq
-
-
-maxBarFreq : Int
-maxBarFreq =
-    round (ic.height / 2)
-
-
-barY : Int -> Float
-barY freq =
-    (ic.height / 2) - toFloat freq
-
-
-barX idx =
-    toFloat idx * barWidth ic - (ic.width / 2)
+barX c idx =
+    toFloat idx * barWidth c - (c.width / 2)
 
 
 barWidth c =
-    c.width / toFloat c.rectCount
+    c.width / toFloat c.totalBars
 
 
-viewBar : Int -> Int -> Svg.Svg msg
-viewBar idx freq =
+viewBar : Config -> Int -> Int -> Svg.Svg msg
+viewBar c idx freq =
     Svg.rect
-        [ SA.width (px (barWidth ic))
-        , SA.height (px (toFloat freq))
-        , translate ( barX idx, barY freq )
+        [ width (barWidth c)
+        , height (toFloat freq)
+        , translate ( barX c idx, barY c freq )
         , style "fill" "#000"
         , style "stroke" "#fff"
         , style "stroke-width" "2"
         ]
         []
+
+
+width n =
+    style "width" (String.fromFloat n)
+
+
+height n =
+    style "height" (String.fromFloat n)
 
 
 opacity n =
