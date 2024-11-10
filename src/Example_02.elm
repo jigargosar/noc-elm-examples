@@ -40,7 +40,11 @@ subscriptions model =
         Sub.none
 
     else
-        Time.every (1000 / 60) (always OnTick)
+        ticksPerSecond 60 OnTick
+
+
+ticksPerSecond n msg =
+    Time.every (1000 / n) (always msg)
 
 
 update : Msg -> Model -> ( Model, Cmd msg )
@@ -53,87 +57,38 @@ update msg model =
 view : Model -> Html msg
 view model =
     Svg.svg
-        [ viewBoxCentered (tupleRepeat 500)
-        , style "width" "500"
+        [ viewBoxCentered (tupleRepeat ic.width)
+        , style "width" (px ic.width)
+        , style "height" (px ic.height)
         , style "background" "#111"
         , style "fill" "none"
         , style "stroke" "none"
         , style "shape-rendering" "geometric-precision"
-
-        --, style "shape-rendering" "crispEdges"
-        --, style "shape-rendering" "optimizeSpeed"
         ]
-        {- (randomWalkerPoints model.ticks
-               |> stepWithInitialSeed ic.seed
-               |> List.map viewPoint
-           )
-        -}
-        viewBars
+        (stepWithInitialSeed ic.seed (randomBars (5 * model.ticks))
+            |> List.map (curry viewBar)
+        )
 
 
-bars =
-    [121
-    , 24
-    , 75
-    , 36
-    , 36
-    , 100
-    , 20
-    , 100
-    , 100
-    , 20
-    , 75
-    , 100
-    , 20
-    , 75
-    , 100
-    , 20
-    , 75
-    , 36
-    , 100
-    , 20
-    ]
-        |> List.take rectCount
+randomBarIndex =
+    Random.int 0 (ic.rectCount - 1)
 
 
-viewBars =
-    bars |> List.indexedMap viewBar
-
-
-width =
-    500
-
-
-height =
-    500
-
-
-rectCount =
-    20
-
-
-rectWidth =
-    width / rectCount
-
-
-viewBar i n =
-    Svg.rect
-        [ SA.width (px rectWidth)
-        , SA.height (px n)
-        , translate ( toFloat i * rectWidth - (width / 2), (height / 2) - n )
-        , style "fill" "#000"
-        , style "stroke" "#fff"
-        , style "stroke-width" "2"
-        ]
-        []
+randomBars ct =
+    Random.list ct randomBarIndex
+        |> Random.map List.Extra.frequencies
 
 
 type alias Config =
     { seed : Int
     , limit : Int
-    , radius : Float
-    , scale : Float
-    , opacity : Float
+    , rectCount : Int
+    , width : Float
+    , height : Float
+
+    --, radius : Float
+    --, scale : Float
+    --, opacity : Float
     }
 
 
@@ -141,53 +96,29 @@ ic : Config
 ic =
     { seed = 16
     , limit = 2000
-    , radius = 5
-    , scale = 5 * 1.5
-    , opacity = 0.2
+    , rectCount = 20
+    , width = 500
+    , height = 500
+
+    --, radius = 5
+    --, scale = 5 * 1.5
+    --, opacity = 0.2
     }
 
 
-randomWalkerPoints : Int -> Generator (List Point)
-randomWalkerPoints ct =
-    Random.list ct randomDirVec
-        |> Random.map offsetsToPoints
+barWidth c =
+    ic.width / toFloat c.rectCount
 
 
-offsetsToPoints : List Point -> List Point
-offsetsToPoints offsets =
-    offsets
-        |> List.Extra.scanr add2 originPt
-        |> List.map (vecScale ic.scale)
-
-
-originPt =
-    tupleRepeat 0
-
-
-randomDirVec : Generator Point
-randomDirVec =
-    Random.uniform ( 1, 0 )
-        [ ( 0, 1 )
-        , ( 0, -1 )
-        , ( -1, 0 )
-
-        --, ( -1, 1 )
-        --, ( 1, -1 )
-        --, ( 1, 1 )
-        --, ( -1, -1 )
-        ]
-
-
-viewPoint ( x, y ) =
-    Svg.circle
-        [ SA.r (String.fromFloat ic.radius)
-        , translate ( x, y )
-        , style "fill" "none"
-        , style "fill" "#fff"
-
-        --, style "stroke" "#FFF"
-        --, style "stroke-width" (String.fromFloat pointRadius)
-        , opacity ic.opacity
+viewBar : Int -> Int -> Svg.Svg msg
+viewBar i n =
+    Svg.rect
+        [ SA.width (px (barWidth ic))
+        , SA.height (px (toFloat n))
+        , translate ( toFloat i * barWidth ic - (ic.width / 2), (ic.height / 2) - toFloat n )
+        , style "fill" "#000"
+        , style "stroke" "#fff"
+        , style "stroke-width" "2"
         ]
         []
 
