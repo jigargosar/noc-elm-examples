@@ -32,12 +32,12 @@ init () =
         initialConfig : Config
         initialConfig =
             { seed = 16
-            , totalBars = 80
+            , totalBars = 20
             , width = 500
             , height = 500
             }
     in
-    ( Model 850 initialConfig, Cmd.none )
+    ( Model 0 initialConfig, Cmd.none )
 
 
 type Msg
@@ -50,28 +50,28 @@ subscriptions model =
         c =
             model.config
 
-        frequencies =
-            barFrequencies model
-
         maxFreq =
             round (c.height / 2)
+
+        surpassedMaxFreq ( _, freq ) =
+            freq > maxFreq
     in
-    if frequencies |> List.any (\( _, freq ) -> freq > maxFreq) then
+    if barFrequencies model |> List.any surpassedMaxFreq then
         Sub.none
 
     else
-        ticksPerSecond (5 * 60) OnTick
-
-
-ticksPerSecond n msg =
-    Time.every (1000 / n) (always msg)
+        Time.every 10 (always OnTick)
 
 
 update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
         OnTick ->
-            ( { model | ticks = model.ticks + 1 }, Cmd.none )
+            let
+                scaledElapsedTicks =
+                    model.config.totalBars // 2
+            in
+            ( { model | ticks = model.ticks + scaledElapsedTicks }, Cmd.none )
 
 
 view : Model -> Html msg
