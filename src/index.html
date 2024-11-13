@@ -1,22 +1,47 @@
 <style>
     * {
         margin: 0;
+        box-sizing: border-box;
     }
 
     html {
         background: #222;
         color: #ddd;
+        display: block;
+    }
+
+    body {
+        display: block;
+    }
+
+    a:visited {
+        color: inherit;
     }
 </style>
 
 
-<a href="Experiments/experiment_01.html">Experiment 01</a>
+<body>
+<div style="
 
-<a href="example_01.html">Example 01</a>
-<a href="example_02.html">Example 02</a>
-<a href="example_03.html">Example 03</a>
-<a href="example_04.html">Example 04</a>
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 640px;
+    margin: auto;
+"
+
+>
+    <a href="Experiments/experiment_01.html">Experiment 01</a>
+
+    <a href="example_01.html">Example 01</a>
+    <a href="example_02.html">Example 02</a>
+    <a href="example_03.html">Example 03</a>
+    <a href="example_04.html">Example 04</a>
+</div>
+
 <div id="elm-app"></div>
+</body>
 
 
 <!--
