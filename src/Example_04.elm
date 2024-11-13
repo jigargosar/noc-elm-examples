@@ -58,7 +58,8 @@ view model =
         , style "stroke" "none"
         , style "shape-rendering" "geometric-precision"
         ]
-        (Random.list model.ticks randomGaussianPoint
+        --(Random.list 1000 randomGaussianPoint
+            (Random.list model.ticks randomGaussianPoint
             |> stepWithInitialSeed 1
             |> List.map viewPoint
         )
@@ -66,7 +67,7 @@ view model =
 
 randomGaussianPoint : Generator Point
 randomGaussianPoint =
-    Random.Float.normal 0 100
+    Random.Float.normal 0 160
         |> Random.map (\x -> ( x, 0 ))
 
 
@@ -76,7 +77,7 @@ viewPoint ( x, y ) =
         , translate ( x, y )
         , style "fill" "none"
         , style "fill" "#fff"
-        , opacity 0.05
+        , opacity 0.1
         ]
         []
 
