@@ -37,7 +37,7 @@ type Msg
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Time.every (1000 / 60) (always OnTick)
+    Time.every (1000 / 240) (always OnTick)
 
 
 update : Msg -> Model -> ( Model, Cmd msg )
@@ -67,17 +67,17 @@ view model =
 
 randomGaussianPoint : Generator Point
 randomGaussianPoint =
-    Random.Float.normal 0 160
+    Random.Float.normal 0 90
         |> Random.map (\x -> ( x, 0 ))
 
 
 viewPoint ( x, y ) =
     Svg.circle
-        [ SA.r "16"
+        [ SA.r "8"
         , translate ( x, y )
         , style "fill" "none"
         , style "fill" "#fff"
-        , opacity 0.1
+        , opacity (2/100)
         ]
         []
 
