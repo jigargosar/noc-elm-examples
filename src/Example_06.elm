@@ -25,7 +25,7 @@ type alias Model =
 init () =
     ( { ticks = 0, permTable = Simplex.permutationTableFromInt 0 }
     , Random.generate PermTable Simplex.permutationTableGenerator
-        |> always Cmd.none
+      --|> always Cmd.none
     )
 
 
