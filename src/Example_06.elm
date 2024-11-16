@@ -25,6 +25,7 @@ type alias Model =
 init () =
     ( { ticks = 0, permTable = Simplex.permutationTableFromInt 0 }
     , Random.generate PermTable Simplex.permutationTableGenerator
+        |> always Cmd.none
     )
 
 
@@ -34,7 +35,7 @@ type Msg
 
 
 subscriptions _ =
-    Time.every (1000 / 60) (always Tick)
+    Time.every (1000 / cfg.freq) (always Tick)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -43,8 +44,8 @@ update msg model =
         Tick ->
             ( { model | ticks = model.ticks + 1 }, Cmd.none )
 
-        PermTable permutationTable ->
-            ( { model | permTable = permutationTable }, Cmd.none )
+        PermTable permTable ->
+            ( { model | permTable = permTable }, Cmd.none )
 
 
 view model =
@@ -54,37 +55,57 @@ view model =
         , style "width" "640"
         , style "fill" "none"
         , style "stroke" "none"
+        , style "shape-rendering" "geometric-precision"
+        , style "background" "#000"
+
+        --, style "shape-rendering" "optimizeSpeed"
+        --, style "shape-rendering" "crispEdges"
         ]
-        --(points model.ticks |> List.map viewPoint)
-        (points model.permTable model.ticks |> List.map viewPoint)
+        (points model.permTable cfg.maxPoints model.ticks |> List.map viewPoint)
 
 
-points permTable n =
-    List.range 0 (n - 1)
+cfg =
+    { maxPoints = 1000
+    , noiseFactor = 0.004
+    , noiseOffset = 10000
+    , freq = 60
+    }
+
+
+points permTable maxPoints n =
+    let
+        ( s, e ) =
+            ( n - maxPoints |> atLeast 0, n - 1 )
+    in
+    List.range s e
         |> List.map
-            (toFloat
-                >> (\i ->
-                        let
-                            dx =
-                                i * 0.004
-
-                            dy =
-                                (i + 10000) * 0.004
-                        in
-                        ( Simplex.noise2d permTable dx 0
-                        , Simplex.noise2d permTable dy 0
-                        )
-                    --( Simplex.noise2d permTable dx 0
-                    --, Simplex.noise2d permTable2 dy 0
-                    --)
-                   )
+            (\i ->
+                ( toFloat i * cfg.noiseFactor
+                , (toFloat i + cfg.noiseOffset) * cfg.noiseFactor
+                )
+                    |> tMap (noise1dNorm permTable)
+                    |> Tuple.mapBoth (lerp -320 320) (lerp -120 120)
             )
-        --|> Debug.log "pt"
-        |> List.map (Tuple.mapBoth (rangeMap -1 1 -320 320) (rangeMap -1 1 -120 120))
 
 
-rangeMap a b c d n =
-    norm a b n |> lerp c d
+noise1dNorm permTable n =
+    norm -1 1 (Simplex.noise2d permTable 0 n)
+
+
+tMap fn =
+    Tuple.mapBoth fn fn
+
+
+atLeast =
+    max
+
+
+atMost =
+    min
+
+
+rangeMap a b c_ d n =
+    norm a b n |> lerp c_ d
 
 
 norm a b n =
@@ -99,25 +120,15 @@ lerp a b n =
     a + (b - a) * n
 
 
-
---permTable : PermutationTable
---permTable =
---    Simplex.permutationTableFromInt 0
---
---
---permTable2 : PermutationTable
---permTable2 =
---    Simplex.permutationTableFromInt 100000
---
-
-
 viewPoint ( x, y ) =
     Svg.circle
-        [ SA.r "24"
+        [ SA.r "10"
         , translate ( x, y )
-        , SA.strokeWidth "2"
-        , SA.stroke "#fff"
+        , SA.strokeWidth "1"
+        , SA.stroke "#ddd"
         , SA.fill "#000"
+
+        --, SA.opacity "0.5"
         ]
         []
 
