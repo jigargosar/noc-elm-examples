@@ -1,4 +1,4 @@
-module Example_01 exposing (..)
+module Example_01 exposing (main)
 
 import Browser
 import Browser.Events
