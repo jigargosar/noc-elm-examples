@@ -55,8 +55,8 @@ view model =
         , style "width" "640"
         , style "fill" "none"
         , style "stroke" "none"
-        , style "shape-rendering" "geometric-precision"
         , style "background" "#000"
+        , style "shape-rendering" "geometric-precision"
 
         --, style "shape-rendering" "optimizeSpeed"
         --, style "shape-rendering" "crispEdges"
