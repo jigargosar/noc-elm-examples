@@ -17,21 +17,22 @@ main =
         }
 
 
+type alias Vec =
+    ( Float, Float )
+
+
 type alias Model =
     { ticks : Int
-    , x : Float
-    , y : Float
-    , dx : Float
-    , dy : Float
+    , position : Vec
+    , velocity : Vec
     }
 
 
+init : () -> ( Model, Cmd Msg )
 init () =
     ( { ticks = 0
-      , x = 0
-      , y = 0
-      , dx = 2.5
-      , dy = 2
+      , position = ( 0, 0 )
+      , velocity = ( 2.5, 2 )
       }
     , Cmd.none
     )
@@ -51,27 +52,39 @@ update msg model =
         Tick ->
             let
                 ( dx, dy ) =
-                    ( model.dx, model.dy )
+                    model.velocity
 
                 ( x, y ) =
-                    ( model.x + dx, model.y + dy )
+                    newPosition
 
-                ( ndx, ndy ) =
-                    ( if ( x < -320 && dx < 0  )|| ( x > 320 && dx > 0  )then
+                newPosition =
+                    vecAdd model.position model.velocity
+
+                velocity =
+                    ( if (x < -320 && dx < 0) || (x > 320 && dx > 0) then
                         -dx
 
                       else
                         dx
-                    , if ( y < -120 && dy < 0 ) || ( y > 120 && dy > 0  )then
+                    , if (y < -120 && dy < 0) || (y > 120 && dy > 0) then
                         -dy
 
                       else
                         dy
                     )
             in
-            ( { model | ticks = model.ticks + 1, x = x, y = y, dx = ndx, dy = ndy }, Cmd.none )
+            ( { model | ticks = model.ticks + 1, position = newPosition, velocity = velocity }, Cmd.none )
 
 
+vecAdd =
+    map2 (+)
+
+
+map2 fn ( a, b ) ( c, d ) =
+    ( fn a c, fn b d )
+
+
+view : Model -> Html.Html msg
 view model =
     Svg.svg
         [ SA.viewBox "-320 -120 640 240"
@@ -85,10 +98,14 @@ view model =
         --, style "shape-rendering" "optimizeSpeed"
         --, style "shape-rendering" "crispEdges"
         ]
-        [ Svg.circle
+        [ let
+            ( x, y ) =
+                model.position
+          in
+          Svg.circle
             [ SA.r "20"
-            , SA.cx (String.fromFloat model.x)
-            , SA.cy (String.fromFloat model.y)
+            , SA.cx (String.fromFloat x)
+            , SA.cy (String.fromFloat y)
             , style "fill" "#444"
             , style "stroke" "#fff"
             , SA.strokeWidth "6"
