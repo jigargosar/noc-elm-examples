@@ -1,10 +1,12 @@
 module Example_1_3 exposing (main)
 
 import Browser
-import Html
+import Html exposing (text)
 import Html.Attributes exposing (style)
+import Json.Decode as JD
 import Svg
 import Svg.Attributes as SA
+import Svg.Events
 import Time
 
 
@@ -23,16 +25,14 @@ type alias Vec =
 
 type alias Model =
     { ticks : Int
-    , position : Vec
-    , velocity : Vec
+    , mouse : Vec
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init () =
     ( { ticks = 0
-      , position = ( 0, 0 )
-      , velocity = ( 2.5, 2 )
+      , mouse = ( 200, -40 )
       }
     , Cmd.none
     )
@@ -40,52 +40,33 @@ init () =
 
 type Msg
     = Tick
+    | MouseMoved Vec
 
 
 subscriptions _ =
     Time.every (1000 / 60) (always Tick)
+        |> always Sub.none
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick ->
-            let
-                ( dx, dy ) =
-                    model.velocity
+            ( { model | ticks = model.ticks + 1 }, Cmd.none )
 
-                ( x, y ) =
-                    newPosition
-
-                newPosition =
-                    vecAdd model.position model.velocity
-
-                velocity =
-                    ( if (x < -320 && dx < 0) || (x > 320 && dx > 0) then
-                        -dx
-
-                      else
-                        dx
-                    , if (y < -120 && dy < 0) || (y > 120 && dy > 0) then
-                        -dy
-
-                      else
-                        dy
-                    )
-            in
-            ( { model | ticks = model.ticks + 1, position = newPosition, velocity = velocity }, Cmd.none )
+        MouseMoved vec ->
+            ( model, Cmd.none )
 
 
-vecAdd =
-    map2 (+)
-
-
-map2 fn ( a, b ) ( c, d ) =
-    ( fn a c, fn b d )
-
-
-view : Model -> Html.Html msg
+view : Model -> Html.Html Msg
 view model =
+    let
+        mouse =
+            model.mouse
+
+        bottomRight =
+            ( 320, 120 )
+    in
     Svg.svg
         [ SA.viewBox "-320 -120 640 240"
         , style "display" "block"
@@ -94,21 +75,67 @@ view model =
         , style "stroke" "none"
         , style "background" "#000"
         , style "shape-rendering" "geometric-precision"
+        , Svg.Events.on "mousemove"
+            (JD.map2 Tuple.pair
+                (JD.field "x" JD.float)
+                (JD.field "y" JD.float)
+                |> JD.map MouseMoved
+            )
 
         --, style "shape-rendering" "optimizeSpeed"
         --, style "shape-rendering" "crispEdges"
         ]
-        [ let
-            ( x, y ) =
-                model.position
-          in
-          Svg.circle
-            [ SA.r "20"
-            , SA.cx (String.fromFloat x)
-            , SA.cy (String.fromFloat y)
-            , style "fill" "#444"
-            , style "stroke" "#fff"
-            , SA.strokeWidth "6"
+        [ viewVec mouse
+            [ style "stroke" "#fff"
+            , SA.strokeWidth "4"
+            , SA.opacity "0.2"
             ]
-            []
+        , viewVec bottomRight
+            [ style "stroke" "#fff"
+            , SA.strokeWidth "4"
+            , SA.opacity "0.2"
+            ]
+        , viewVec (vecSub bottomRight mouse)
+            [ style "stroke" "#fff"
+            , SA.strokeWidth "4"
+            , SA.opacity "1"
+            , translate mouse
+            ]
         ]
+
+
+viewVec v =
+    polyline [ ( 0, 0 ), v ]
+
+
+px f =
+    String.fromFloat f ++ "px"
+
+
+translate ( x, y ) =
+    style "translate" (px x ++ " " ++ px y)
+
+
+polyline pts attrs =
+    Svg.polyline (SA.points (toPointsAttribute pts) :: attrs) []
+
+
+toPointsAttribute : List Vec -> String
+toPointsAttribute pts =
+    let
+        ptToString ( x, y ) =
+            String.fromFloat x ++ "," ++ String.fromFloat y
+    in
+    pts |> List.map ptToString |> String.join " "
+
+
+vecSub =
+    map2 (-)
+
+
+vecAdd =
+    map2 (+)
+
+
+map2 fn ( a, b ) ( c, d ) =
+    ( fn a c, fn b d )
