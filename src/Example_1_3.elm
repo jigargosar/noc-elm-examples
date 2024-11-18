@@ -29,10 +29,18 @@ type alias Model =
     }
 
 
+width =
+    640
+
+
+height =
+    240
+
+
 init : () -> ( Model, Cmd Msg )
 init () =
     ( { ticks = 0
-      , mouse = ( 200, -40 )
+      , mouse = ( width * 1 / 3, height * 2 / 3 )
       }
     , Cmd.none
     )
@@ -55,7 +63,7 @@ update msg model =
             ( { model | ticks = model.ticks + 1 }, Cmd.none )
 
         MouseMoved vec ->
-            ( model, Cmd.none )
+            ( { model | mouse = vec }, Cmd.none )
 
 
 view : Model -> Html.Html Msg
@@ -64,44 +72,47 @@ view model =
         mouse =
             model.mouse
 
-        bottomRight =
-            ( 320, 120 )
+        vecA =
+            ( width / 2, height / 2 )
     in
     Svg.svg
-        [ SA.viewBox "-320 -120 640 240"
+        [ SA.viewBox (viewBox4 0 0 width height)
         , style "display" "block"
         , style "width" "640"
         , style "fill" "none"
         , style "stroke" "none"
         , style "background" "#000"
         , style "shape-rendering" "geometric-precision"
-        , Svg.Events.on "mousemove"
-            (JD.map2 Tuple.pair
-                (JD.field "x" JD.float)
-                (JD.field "y" JD.float)
-                |> JD.map MouseMoved
-            )
-
-        --, style "shape-rendering" "optimizeSpeed"
-        --, style "shape-rendering" "crispEdges"
+        , Svg.Events.on "mousemove" mouseDecoder
         ]
         [ viewVec mouse
             [ style "stroke" "#fff"
             , SA.strokeWidth "4"
             , SA.opacity "0.2"
             ]
-        , viewVec bottomRight
+        , viewVec vecA
             [ style "stroke" "#fff"
             , SA.strokeWidth "4"
             , SA.opacity "0.2"
             ]
-        , viewVec (vecSub bottomRight mouse)
+        , viewVec (vecSub vecA mouse)
             [ style "stroke" "#fff"
             , SA.strokeWidth "4"
             , SA.opacity "1"
             , translate mouse
             ]
         ]
+
+
+mouseDecoder =
+    JD.map2 Tuple.pair
+        (JD.field "x" JD.float)
+        (JD.field "y" JD.float)
+        |> JD.map MouseMoved
+
+
+viewBox4 x y w h =
+    [ x, y, w, h ] |> List.map String.fromFloat |> String.join " "
 
 
 viewVec v =
