@@ -25,6 +25,7 @@ type alias Model =
     , mouse : Vec
     , position : Vec
     , velocity : Vec
+    , acceleration : Vec
     }
 
 
@@ -51,10 +52,12 @@ init () =
     ( { ticks = 0
       , mouse = ( screen.left, screen.top )
       , position = ( 0, 0 )
-      , velocity = ( 2, 2 )
+      , velocity = ( 0, 0 )
+      , acceleration = ( -0.001, 0.01 )
       }
-    , Random.generate identity <|
-        Random.map2 GotPositionAnVelocity randomVecOnScreen randomVelocity
+    , Random.map2 GotPositionAnVelocity randomVecOnScreen randomVelocity
+        |> Random.generate identity
+        |> always Cmd.none
     )
 
 
@@ -81,11 +84,22 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick ->
+            let
+                maxSpeed =
+                    5
+
+                velocity =
+                    vecAdd model.velocity model.acceleration
+                        |> vecLimitMagnitude maxSpeed
+
+                position =
+                    vecAdd model.position velocity
+                        |> warpPosition
+            in
             ( { model
                 | ticks = model.ticks + 1
-                , position =
-                    vecAdd model.position model.velocity
-                        |> warpPosition
+                , position = position
+                , velocity = velocity
               }
             , Cmd.none
             )
@@ -95,6 +109,19 @@ update msg model =
 
         GotPositionAnVelocity pos vel ->
             ( { model | position = pos, velocity = vel }, Cmd.none )
+
+
+vecLimitMagnitude limit v =
+    let
+        ( mag, angle ) =
+            toPolar v
+    in
+    ( atMost limit mag, angle )
+        |> fromPolar
+
+
+atMost =
+    min
 
 
 warpPosition ( x, y ) =
