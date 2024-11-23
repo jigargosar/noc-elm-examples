@@ -2,8 +2,8 @@ module Experiments.Experiment_1_1 exposing (main)
 
 import Browser
 import Html exposing (..)
-import Html.Attributes as HA exposing (style)
-import Random exposing (Generator)
+import Html.Attributes exposing (style)
+import Random exposing (Generator, Seed)
 import Svg
 import Svg.Attributes as SA
 import Time
@@ -22,6 +22,7 @@ main =
 type alias Model =
     { ticks : Int
     , particles : List Particle
+    , seed : Seed
     }
 
 
@@ -32,10 +33,17 @@ type alias Particle =
     }
 
 
-type alias Vec =
-    ( Float, Float )
+type alias Screen =
+    { width : Float
+    , height : Float
+    , left : Float
+    , right : Float
+    , top : Float
+    , bottom : Float
+    }
 
 
+screen : Screen
 screen =
     let
         ( w, h ) =
@@ -50,10 +58,13 @@ init () =
         initialSeed =
             Random.initialSeed 0
 
+        randomParticles =
+            Random.list 1000 randomParticle
+
         ( particles, seed ) =
-            Random.step (Random.list 100 randomParticle) initialSeed
+            Random.step randomParticles initialSeed
     in
-    ( { ticks = 0, particles = particles }, Cmd.none )
+    ( { ticks = 0, particles = particles, seed = seed }, Cmd.none )
 
 
 type Msg
@@ -69,44 +80,53 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick ->
-            ( { model | ticks = model.ticks + 1, particles = List.map updateParticle model.particles }, Cmd.none )
+            ( { model
+                | ticks = model.ticks + 1
+                , particles = List.map updateParticle model.particles
+              }
+            , Cmd.none
+            )
 
 
 updateParticle p =
     let
         position =
             vecAdd p.position p.velocity
-                |> warpPosition
+                --|> warpPosition
+                |> warpPositionInScreen (growScreenByRadius p.radius screen)
     in
     { p | position = position }
 
 
-warpPosition ( x, y ) =
-    ( if x > screen.right then
-        screen.left
+growScreenByRadius r s =
+    let
+        d =
+            r * 2
 
-      else if x < screen.left then
-        screen.right
+        ( w, h ) =
+            ( s.width + d, s.height + d )
+    in
+    { width = w, height = h, left = -w / 2, right = w / 2, top = -h / 2, bottom = h / 2 }
+
+
+warpPositionInScreen s ( x, y ) =
+    ( if x > s.right then
+        s.left
+
+      else if x < s.left then
+        s.right
 
       else
         x
-    , if y > screen.bottom then
-        screen.top
+    , if y > s.bottom then
+        s.top
 
-      else if y < screen.top then
-        screen.bottom
+      else if y < s.top then
+        s.bottom
 
       else
         y
     )
-
-
-vecAdd =
-    map2 (+)
-
-
-map2 fn ( a, b ) ( c, d ) =
-    ( fn a c, fn b d )
 
 
 view : Model -> Html Msg
@@ -118,9 +138,7 @@ view model =
         , style "fill" "none"
         , style "stroke" "none"
         ]
-        ((points |> List.map viewPoint |> always [])
-            ++ (model.particles |> List.map viewParticle)
-        )
+        (model.particles |> List.map viewParticle)
 
 
 type alias Point =
@@ -129,10 +147,27 @@ type alias Point =
 
 randomParticle : Generator Particle
 randomParticle =
-    Random.map3 Particle
-        randomPositionOnScreen
-        (Random.float 10 15)
-        randomVelocity
+    randomRadius
+        |> Random.andThen
+            (\radius ->
+                Random.map2 (\position velocity -> Particle position radius velocity)
+                    randomPositionOnScreen
+                    (randomVelocityFromRadius radius)
+            )
+
+
+randomVelocityFromRadius r =
+    let
+        randomMag =
+            Random.float 0 1
+                |> always (Random.constant ((r * r) * 0.005))
+    in
+    Random.pair randomMag (Random.float 0 (2 * pi))
+        |> Random.map fromPolar
+
+
+randomRadius =
+    Random.float 5 15
 
 
 randomPositionOnScreen =
@@ -142,7 +177,7 @@ randomPositionOnScreen =
 randomVelocity =
     let
         randomMag =
-            Random.float 0 0.05
+            Random.float 0 1
     in
     Random.pair randomMag (Random.float 0 (2 * pi))
         |> Random.map fromPolar
@@ -165,16 +200,6 @@ points =
         |> Tuple.first
 
 
-viewPoint ( x, y ) =
-    Svg.circle
-        [ SA.r "10"
-        , translate ( x, y )
-        , style "fill" "#FFF"
-        , style "opacity" "0.1"
-        ]
-        []
-
-
 viewParticle p =
     let
         ( x, y ) =
@@ -183,10 +208,22 @@ viewParticle p =
     Svg.circle
         [ SA.r (String.fromFloat p.radius)
         , translate ( x, y )
-        , style "fill" "#bbb"
-        , style "opacity" "0.5"
+        , style "fill" "#fff"
+        , style "opacity" "0.1"
         ]
         []
+
+
+type alias Vec =
+    ( Float, Float )
+
+
+vecAdd =
+    map2 (+)
+
+
+map2 fn ( a, b ) ( c, d ) =
+    ( fn a c, fn b d )
 
 
 px f =

@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      elm-canvas:
+        specifier: ^2.2.4
+        version: 2.2.4
     devDependencies:
       '@parcel/transformer-elm':
         specifier: 2.13.0
@@ -665,6 +669,9 @@ packages:
 
   electron-to-chromium@1.5.63:
     resolution: {integrity: sha512-ddeXKuY9BHo/mw145axlyWjlJ1UBt4WK3AlvkT7W2AbqfRQoacVoRUCF6wL3uIx/8wT9oLKXzI+rFqHHscByaA==}
+
+  elm-canvas@2.2.4:
+    resolution: {integrity: sha512-Kc2MD5CO161/+6WWfzmRB14v4D4RFTK9+7oWOCKVLIxNdud4YYvFIwfJS5PrhMGfiyqxK64ie2FDIcFGLVJdbw==}
 
   elm-hot@1.1.6:
     resolution: {integrity: sha512-zYZJlfs7Gt4BdjA+D+857K+XAWzwwySJmXCgFpHW1dIEfaHSZCIPYPf7/jinZBLfKRkOAlKzI32AA84DY50g7Q==}
@@ -1981,6 +1988,8 @@ snapshots:
   dotenv@16.4.5: {}
 
   electron-to-chromium@1.5.63: {}
+
+  elm-canvas@2.2.4: {}
 
   elm-hot@1.1.6: {}
 
