@@ -12,9 +12,9 @@
   "devDependencies": {
     "@parcel/transformer-elm": "2.13.0",
     "elm": "0.19.1-6",
-    "parcel": "2.13.0"
-  },
-  "dependencies": {
-    "elm-canvas": "^2.2.4"
+    "elm-canvas": "^2.2.4",
+    "parcel": "2.13.0",
+    "prettier": "3.3.3",
+    "prettier-plugin-elm": "0.11.0"
   }
 }
