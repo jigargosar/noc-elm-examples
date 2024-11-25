@@ -52,8 +52,6 @@ main =
 
 type alias Model =
     { ticks : Int
-    , position : Vec
-    , velocity : Vec
     , particles : List Particle
     , mouse : Vec
     , mouseDown : Bool
@@ -68,11 +66,13 @@ type alias Particle =
     }
 
 
+particleRadius p =
+    p.mass * 8
+
+
 init : () -> ( Model, Cmd Msg )
 init () =
     ( { ticks = 0
-      , position = ( 0, screen.top + 30 )
-      , velocity = ( 0, 0 )
       , particles =
             [ Particle ( screen.left + screen.width * 1 / 3, screen.top + 30 ) ( 0, 0 ) 10
             , Particle ( screen.left + screen.width * 2 / 3, screen.top + 30 ) ( 0, 0 ) 2
@@ -111,59 +111,51 @@ update msg model =
         Tick ->
             ( { model
                 | ticks = model.ticks + 1
-                , position = vecAdd model.position model.velocity
-                , velocity =
-                    vecAdd
-                        (velocity_ model.position model.velocity)
-                        (acceleration_ 1 model.mouseDown)
                 , particles = List.map (updateParticle model.mouseDown) model.particles
               }
             , Cmd.none
             )
 
 
-updateParticle : Bool -> Particle -> Particle
 updateParticle mouseDown p =
     { p
         | position = vecAdd p.position p.velocity
-        , velocity =
-            vecAdd
-                (velocity_ p.position p.velocity)
-                (acceleration_ p.mass mouseDown)
+        , velocity = vecAdd p.velocity (acceleration_ p.mass mouseDown)
     }
+        |> bounceWithinScreen screen
 
 
-velocity_ position velocity =
+bounceWithinScreen s p =
     let
-        s =
-            screen
-
         ( x, y ) =
-            position
+            p.position
 
         ( dx, dy ) =
-            velocity
+            p.velocity
+
+        newVelocity =
+            ( if (x < s.left && dx < 0) || (x > s.right && dx > 0) then
+                -dx
+
+              else
+                dx
+            , if (y < s.top && dy < 0) || (y > s.bottom && dy > 0) then
+                -dy
+
+              else
+                dy
+            )
     in
-    ( if (x < s.left && dx < 0) || (x > s.right && dx > 0) then
-        -dx
-
-      else
-        dx
-    , if (y < s.top && dy < 0) || (y > s.bottom && dy > 0) then
-        -dy
-
-      else
-        dy
-    )
+    { p | velocity = newVelocity }
 
 
-acceleration_ mass mouseDown =
+acceleration_ mass isWindy =
     let
         gravity =
             ( 0, 0.1 )
 
         windForce =
-            if mouseDown then
+            if isWindy then
                 ( 0.1, 0 )
 
             else
@@ -186,15 +178,7 @@ view model =
         , style "stroke-linecap" "round"
         , Svg.Events.on "mousemove" mouseDecoder
         ]
-        [ Svg.circle
-            [ SA.r "20"
-            , style "fill" "#555"
-            , style "stroke" "#fff"
-            , style "stroke-width" "2"
-            , translate model.position
-            ]
-            []
-        , List.map viewParticle model.particles
+        [ List.map viewParticle model.particles
             |> group []
         ]
 
@@ -202,7 +186,7 @@ view model =
 viewParticle : Particle -> Svg Msg
 viewParticle p =
     Svg.circle
-        [ SA.r (String.fromFloat (8 * p.mass))
+        [ SA.r (String.fromFloat (particleRadius p))
         , style "fill" "#555"
         , style "stroke" "#fff"
         , style "stroke-width" "2"
