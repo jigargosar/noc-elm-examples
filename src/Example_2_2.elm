@@ -117,10 +117,26 @@ update msg model =
             )
 
 
+
+--updateParticle mouseDown p =
+--    -- this function caused gain in momentum
+--    { p
+--        | position = vecAdd p.position p.velocity
+--        , velocity = vecAdd p.velocity (acceleration_ p.mass mouseDown)
+--    }
+--        |> bounceWithinScreen screen
+
+
+updateParticle : Bool -> Particle -> Particle
 updateParticle mouseDown p =
+    --this function causes loss of momentum
+    let
+        newVelocity =
+            vecAdd p.velocity (acceleration_ p.mass mouseDown)
+    in
     { p
-        | position = vecAdd p.position p.velocity
-        , velocity = vecAdd p.velocity (acceleration_ p.mass mouseDown)
+        | velocity = newVelocity
+        , position = vecAdd p.position newVelocity
     }
         |> bounceWithinScreen screen
 
