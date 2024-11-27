@@ -155,14 +155,24 @@ bounceWithinScreen s p =
 
               else
                 dx
-            , if (y < s.top && dy < 0) || (y > s.bottom && dy > 0) then
+            , if
+                --(y < s.top && dy < 0) ||
+                y > s.bottom && dy > 0
+              then
                 -dy
 
               else
                 dy
             )
+
+        newPosition =
+            ( clamp s.left s.right x, y |> atMost s.bottom )
     in
-    { p | velocity = newVelocity }
+    { p | position = newPosition, velocity = newVelocity }
+
+
+atMost =
+    min
 
 
 acceleration_ mass isWindy =
