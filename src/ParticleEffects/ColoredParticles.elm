@@ -198,9 +198,44 @@ view model =
         , SA.fill "none"
         , SA.stroke "none"
         ]
-        [ model.particles
+        [ Svg.defs []
+            [ Svg.linearGradient
+                [ SA.id "grad"
+                , SA.gradientUnits "userSpaceOnUse"
+
+                --, SA.x1 "-50%"
+                --, SA.y1 "-50%"
+                --, SA.x2 "50%"
+                --, SA.y2 "50%"
+                --, SA.x1 "0%"
+                --, SA.y1 "0%"
+                --, SA.x2 "100%"
+                --, SA.y2 "100%"
+                --, SA.x1 "-0.5"
+                --, SA.y1 "-0.5"
+                --, SA.x2 "0.5"
+                --, SA.y2 "0.5"
+                --
+                --, SA.width "100%"
+                --, SA.height "100%"
+                --, translate ( screen.left, screen.top )
+                --, style "rotate" "180deg"
+                --, style "transform" "translate(-500px, -250px) rotate(45deg) "
+                , style "transform" "rotate(45deg) translate(-500px, -250px) "
+
+                --, style "transform" "rotate(315deg) translate(-500px, -250px) "
+                --, style "transform" "rotate(-45deg) translate(-500px, -250px) "
+                ]
+                [ Svg.stop [ SA.offset "50%", SA.stopColor "white" ] []
+
+                --, Svg.stop [ SA.offset "50%", SA.stopColor "magenta" ] []
+                , Svg.stop [ SA.offset "50%", SA.stopColor "blue" ] []
+                ]
+            ]
+        , model.particles
             |> List.map (viewParticle screen)
             |> group []
+        , Svg.circle [ SA.r "5", SA.fill "dodgerblue" ] []
         ]
 
 
@@ -218,10 +253,14 @@ viewParticle scr particle =
             (360 / scr.width) * (x + scr.left)
     in
     circle particle.radius
-        [ translate ( x, y )
+        --[ translate ( x, y )
+        [ SA.cx (String.fromFloat x)
+        , SA.cy (String.fromFloat y)
         , SA.stroke "#000"
         , SA.strokeWidth "1"
-        , SA.fill ("hsl(" ++ String.fromFloat hue ++ "deg 100 50/1)")
+
+        --, SA.fill ("hsl(" ++ String.fromFloat hue ++ "deg 100 50/1)")
+        , SA.fill "url(#grad)"
         ]
 
 
