@@ -198,14 +198,21 @@ bounceWithinScreen s_ p =
               else
                 dy
             )
+
+        newPosition =
+            ( clamp s.left s.right x, y |> atMost s.bottom )
     in
-    { p | velocity = newVelocity }
+    { p | position = newPosition, velocity = newVelocity }
+
+
+atMost =
+    min
 
 
 acceleration_ mass isWindy =
     let
         gravity =
-            ( 0, 0.1 )
+            ( 0, 1 )
 
         windForce =
             if isWindy then
