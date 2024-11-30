@@ -30,18 +30,21 @@ type alias Particle =
     }
 
 
-initParticle i =
+initParticle total i =
     let
         x =
-            --(screen.width / 10) * (toFloat i + 0.5) + screen.left
-            (screen.width * (toFloat i + 0.5) / 10) + screen.left
+            (screen.width * (toFloat i + 0.5) / toFloat total) + screen.left
     in
-    Particle ( x, 30 ) ( 0, 0 ) (toFloat 1 * 2)
+    { position = ( x, 30 ), velocity = ( 0, 0 ), mass = toFloat 1 * 2 }
+
+
+initParticles total =
+    List.range 0 (total - 1) |> List.map (initParticle total)
 
 
 init : () -> ( Model, Cmd msg )
 init () =
-    ( { particles = List.range 0 9 |> List.map initParticle }
+    ( { particles = initParticles 10 }
     , Cmd.none
     )
 
@@ -72,5 +75,9 @@ view model =
         ]
 
 
+particleRadius p =
+    p.mass * 8
+
+
 viewParticle p =
-    circle (p.mass * 8) [ fill "white", translate p.position ]
+    circle (particleRadius p) [ fill "white", translate p.position ]
