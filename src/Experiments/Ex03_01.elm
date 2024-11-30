@@ -40,17 +40,16 @@ init () =
     let
         track =
             List.range 1 18
-                |> List.map
-                    (\x ->
+                |> List.indexedMap
+                    (\i x ->
                         TrackSeg ( x, 5 )
-                            (if x == 1 then
+                            (if List.member i [ 1, 3, 6 ] then
                                 True
 
                              else
                                 False
                             )
                     )
-                |> listMapFirst addResource
     in
     ( { track = track
       }
@@ -66,15 +65,6 @@ addResource ts =
     { ts | resource = True }
 
 
-listMapFirst fn list =
-    case list of
-        [] ->
-            []
-
-        h :: t ->
-            fn h :: t
-
-
 type Msg
     = Tick
 
@@ -82,7 +72,7 @@ type Msg
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     --Time.every (1000 / 60) (always Tick)
-    Time.every 500 (always Tick)
+    Time.every 400 (always Tick)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
