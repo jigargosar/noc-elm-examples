@@ -19,13 +19,27 @@ main =
         }
 
 
+type alias GP =
+    ( Int, Int )
+
+
 type alias Model =
-    {}
+    { resourceGPs : List GP
+    , trackGPs : List GP
+    }
 
 
 init : () -> ( Model, Cmd msg )
 init () =
-    ( Model
+    let
+        trackGPs =
+            List.range 1 18
+                |> List.map (\x -> ( x, 5 ))
+
+        resourceGPs =
+            List.take 1 trackGPs
+    in
+    ( { resourceGPs = resourceGPs, trackGPs = trackGPs }
     , Cmd.none
     )
 
@@ -68,13 +82,6 @@ cellSize =
 view : Model -> Html Msg
 view model =
     let
-        trackGPs =
-            List.range 1 18
-                |> List.map (\x -> ( x, 5 ))
-
-        resourceGPs =
-            List.take 1 trackGPs
-
         ( width, height ) =
             size
     in
@@ -83,21 +90,19 @@ view model =
         , widthInPx width
         , heightInPx height
         ]
-        [ List.map viewResourceGP trackGPs
+        [ List.map viewTrackGP model.trackGPs
             |> group []
-        , List.map viewTrackGP trackGPs
-            |> group []
-        , List.map viewResourceGP resourceGPs
+        , List.map viewResourceGP model.resourceGPs
             |> group []
         ]
 
 
 viewResourceGP gp =
-    rect (vecScale 0.6 cellSize) [ fill "pink", stroke "gold", translateToGP gp ]
+    rect (vecScale 0.6 cellSize) [ fill "pink", stroke "white", translateToGP gp ]
 
 
 viewTrackGP gp =
-    rect cellSize [ fill "dodgerblue", stroke "gold", translateToGP gp ]
+    rect cellSize [ fill "dodgerblue", stroke "white", translateToGP gp ]
 
 
 translateToGP gp =
