@@ -104,7 +104,10 @@ checkEdges p =
             screen
 
         nvy =
-            if y > s.bottom && vy > 0 then
+            if
+                y > s.bottom
+                --&& vy > 0
+            then
                 vy * -1
 
             else
