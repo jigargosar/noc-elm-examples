@@ -37,7 +37,7 @@ initParticle total i mass =
         x =
             (screen.width * (toFloat i + 0.5) / toFloat total) + screen.left
     in
-    { position = ( x, screen.top ), velocity = ( 0, 0 ), mass = mass }
+    { position = ( x, screen.top + 30 ), velocity = ( 0, 0 ), mass = mass }
 
 
 randomParticle total i =
@@ -76,7 +76,53 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick ->
-            ( model, Cmd.none )
+            ( { model | particles = List.map updateParticle model.particles }, Cmd.none )
+
+
+updateParticle p =
+    let
+        velocity =
+            vecAdd p.velocity (particleAcceleration p)
+    in
+    { p
+        | velocity = velocity
+        , position = vecAdd p.position velocity
+    }
+        |> checkEdges
+
+
+checkEdges p =
+    let
+        ( x, y ) =
+            p.position
+
+        ( vx, vy ) =
+            p.velocity
+
+        s =
+            --shrinkScreenByRadius (particleRadius p) screen
+            screen
+
+        nvy =
+            if y > s.bottom && vy > 0 then
+                vy * -1
+
+            else
+                vy
+    in
+    { p | position = ( x, y |> atMost s.bottom ), velocity = ( vx, nvy ) }
+
+
+atMost =
+    min
+
+
+particleAcceleration p =
+    let
+        gravity =
+            ( 0, 0.5 )
+    in
+    vecAdd ( 0, 0 ) gravity
 
 
 view : Model -> Html Msg

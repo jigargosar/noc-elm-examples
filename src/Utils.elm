@@ -5,10 +5,6 @@ import Svg
 import Svg.Attributes as SA
 
 
-type alias Vec =
-    ( Float, Float )
-
-
 type alias Screen =
     { width : Float
     , height : Float
@@ -135,6 +131,22 @@ mul =
 
 add =
     (+)
+
+
+type alias Vec =
+    ( Float, Float )
+
+
+vecSub =
+    map2 (-)
+
+
+vecAdd =
+    map2 (+)
+
+
+map2 fn ( a, b ) ( c, d ) =
+    ( fn a c, fn b d )
 
 
 vecScale s =
