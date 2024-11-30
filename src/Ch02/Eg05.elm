@@ -3,6 +3,8 @@ module Ch02.Eg05 exposing (..)
 import Browser
 import Html exposing (Html)
 import Html.Attributes exposing (style)
+import Random
+import Random.Extra
 import Svg exposing (text)
 import Svg.Attributes as SA
 import Time
@@ -30,21 +32,33 @@ type alias Particle =
     }
 
 
-initParticle total i =
+initParticle total i mass =
     let
         x =
             (screen.width * (toFloat i + 0.5) / toFloat total) + screen.left
     in
-    { position = ( x, 30 ), velocity = ( 0, 0 ), mass = toFloat 1 * 2 }
+    { position = ( x, screen.top ), velocity = ( 0, 0 ), mass = mass }
 
 
-initParticles total =
-    List.range 0 (total - 1) |> List.map (initParticle total)
+randomParticle total i =
+    Random.float 0.5 3
+        |> Random.map (initParticle total i)
+
+
+randomParticles : Int -> Random.Generator (List Particle)
+randomParticles total =
+    List.range 0 (total - 1)
+        |> List.map (randomParticle total)
+        |> Random.Extra.combine
 
 
 init : () -> ( Model, Cmd msg )
 init () =
-    ( { particles = initParticles 10 }
+    let
+        ( particles, seed ) =
+            Random.step (randomParticles 10) (Random.initialSeed 0)
+    in
+    ( { particles = particles }
     , Cmd.none
     )
 
