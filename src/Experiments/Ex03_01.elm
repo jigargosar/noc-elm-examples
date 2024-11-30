@@ -80,16 +80,27 @@ update msg model =
     case msg of
         Tick ->
             let
-                track : Track
                 track =
-                    List.range 0 (List.length model.track - 1)
-                        |> List.foldr trackCheckAtIndex model.track
+                    updateTrack model.track
             in
             ( { model | track = track }, Cmd.none )
 
 
 type alias Track =
     List TrackSeg
+
+
+updateTrack : Track -> Track
+updateTrack track =
+    let
+        foo curr prev =
+            if not curr.resource && prev.resource then
+                ( addResource curr, removeResource prev )
+
+            else
+                ( curr, prev )
+    in
+    foldr2 foo track
 
 
 trackCheckAtIndex : Int -> Track -> Track
@@ -106,6 +117,41 @@ trackCheckAtIndex i list =
 
         _ ->
             list
+
+
+foldr2 : (a -> a -> ( a, a )) -> List a -> List a
+foldr2 fn list =
+    case List.reverse list of
+        [] ->
+            []
+
+        h :: t ->
+            foldHelp fn h t []
+
+
+foldl2 : (a -> a -> ( a, a )) -> List a -> List a
+foldl2 fn list =
+    case list of
+        [] ->
+            []
+
+        h :: t ->
+            foldHelp fn h t []
+                |> List.reverse
+
+
+foldHelp : (a -> a -> ( a, a )) -> a -> List a -> List a -> List a
+foldHelp fn a list rAcc =
+    case list of
+        b :: rest ->
+            let
+                ( a_, b_ ) =
+                    fn a b
+            in
+            foldHelp fn b_ rest (a_ :: rAcc)
+
+        [] ->
+            a :: rAcc
 
 
 size =
