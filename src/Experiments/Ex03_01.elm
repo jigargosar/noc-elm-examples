@@ -71,18 +71,37 @@ view model =
         trackGPs =
             List.range 1 18
                 |> List.map (\x -> ( x, 5 ))
+
+        resourceGPs =
+            List.take 1 trackGPs
+
+        ( width, height ) =
+            size
     in
     svg
-        [ SA.viewBox "-250 -250 500 500"
-        , style "width" "500"
+        [ viewBoxFromSize size
+        , widthInPx width
+        , heightInPx height
         ]
-        [ List.map viewTrackGP trackGPs
-            |> Svg.g []
+        [ List.map viewResourceGP trackGPs
+            |> group []
+        , List.map viewTrackGP trackGPs
+            |> group []
+        , List.map viewResourceGP resourceGPs
+            |> group []
         ]
+
+
+viewResourceGP gp =
+    rect (vecScale 0.6 cellSize) [ fill "pink", stroke "gold", translateToGP gp ]
 
 
 viewTrackGP gp =
-    rect cellSize [ fill "dodgerblue", stroke "white", translate (gpToScreen gp) ]
+    rect cellSize [ fill "dodgerblue", stroke "gold", translateToGP gp ]
+
+
+translateToGP gp =
+    translate (gpToScreen gp)
 
 
 gpToScreen ( x, y ) =
@@ -94,18 +113,3 @@ gpToScreen ( x, y ) =
             size
     in
     ( (toFloat x + 0.5) * cw - w / 2, (toFloat y + 0.5) * ch - h / 2 )
-
-
-stroke =
-    style "stroke"
-
-
-rect ( w, h ) attrs =
-    Svg.rect
-        (SA.x (String.fromFloat (-w / 2))
-            :: SA.y (String.fromFloat (-h / 2))
-            :: SA.width (String.fromFloat w)
-            :: SA.height (String.fromFloat h)
-            :: attrs
-        )
-        []

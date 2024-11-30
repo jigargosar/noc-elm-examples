@@ -93,3 +93,53 @@ translate ( x, y ) =
 
 px f =
     String.fromFloat f ++ "px"
+
+
+group =
+    Svg.g
+
+
+viewBoxFromSize ( w, h ) =
+    [ -w / 2, -h / 2, w, h ]
+        |> List.map String.fromFloat
+        |> String.join " "
+        |> SA.viewBox
+
+
+widthInPx w =
+    style "width" (px w)
+
+
+heightInPx h =
+    style "height" (px h)
+
+
+stroke =
+    style "stroke"
+
+
+rect ( w, h ) attrs =
+    Svg.rect
+        (SA.x (String.fromFloat (-w / 2))
+            :: SA.y (String.fromFloat (-h / 2))
+            :: SA.width (String.fromFloat w)
+            :: SA.height (String.fromFloat h)
+            :: attrs
+        )
+        []
+
+
+mul =
+    (*)
+
+
+vecScale s =
+    tupleMap (mul s)
+
+
+tupleMap fn =
+    Tuple.mapBoth fn fn
+
+
+scale s =
+    style "scale" (String.fromFloat s)
