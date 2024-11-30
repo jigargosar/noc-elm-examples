@@ -133,6 +133,10 @@ mul =
     (*)
 
 
+add =
+    (+)
+
+
 vecScale s =
     tupleMap (mul s)
 

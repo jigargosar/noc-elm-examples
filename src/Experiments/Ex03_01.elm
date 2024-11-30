@@ -3,6 +3,7 @@ module Experiments.Ex03_01 exposing (..)
 import Browser
 import Html exposing (Html)
 import Html.Attributes exposing (style)
+import List.Extra
 import Svg exposing (text)
 import Svg.Attributes as SA
 import Time
@@ -23,25 +24,55 @@ type alias GP =
     ( Int, Int )
 
 
+type alias TrackSeg =
+    { gp : GP
+    , resource : Bool
+    }
+
+
 type alias Model =
-    { resourceGPs : List GP
-    , trackGPs : List GP
+    { track : List TrackSeg
     }
 
 
 init : () -> ( Model, Cmd msg )
 init () =
     let
-        trackGPs =
+        track =
             List.range 1 18
-                |> List.map (\x -> ( x, 5 ))
+                |> List.map
+                    (\x ->
+                        TrackSeg ( x, 5 )
+                            (if x == 1 then
+                                True
 
-        resourceGPs =
-            List.take 1 trackGPs
+                             else
+                                False
+                            )
+                    )
+                |> listMapFirst addResource
     in
-    ( { resourceGPs = resourceGPs, trackGPs = trackGPs }
+    ( { track = track
+      }
     , Cmd.none
     )
+
+
+removeResource ts =
+    { ts | resource = False }
+
+
+addResource ts =
+    { ts | resource = True }
+
+
+listMapFirst fn list =
+    case list of
+        [] ->
+            []
+
+        h :: t ->
+            fn h :: t
 
 
 type Msg
@@ -50,14 +81,41 @@ type Msg
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Time.every (1000 / 60) (always Tick)
+    --Time.every (1000 / 60) (always Tick)
+    Time.every 500 (always Tick)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick ->
-            ( model, Cmd.none )
+            let
+                track : Track
+                track =
+                    List.range 0 (List.length model.track - 1)
+                        |> List.foldr trackCheckAtIndex model.track
+            in
+            ( { model | track = track }, Cmd.none )
+
+
+type alias Track =
+    List TrackSeg
+
+
+trackCheckAtIndex : Int -> Track -> Track
+trackCheckAtIndex i list =
+    case ( List.Extra.getAt (i - 1) list, List.Extra.getAt i list ) of
+        ( Just prev, Just curr ) ->
+            if not curr.resource && prev.resource then
+                list
+                    |> List.Extra.updateAt i addResource
+                    |> List.Extra.updateAt (i - 1) removeResource
+
+            else
+                list
+
+        _ ->
+            list
 
 
 size =
@@ -90,11 +148,20 @@ view model =
         , widthInPx width
         , heightInPx height
         ]
-        [ List.map viewTrackGP model.trackGPs
-            |> group []
-        , List.map viewResourceGP model.resourceGPs
+        [ List.map viewTrackSegment model.track
             |> group []
         ]
+
+
+viewTrackSegment ts =
+    [ viewTrackGP ts.gp
+    , if ts.resource then
+        viewResourceGP ts.gp
+
+      else
+        group [] []
+    ]
+        |> group []
 
 
 viewResourceGP gp =
