@@ -34,8 +34,14 @@ type alias Particle =
 
 initParticle total i mass =
     let
+        gap =
+            screen.width / toFloat total
+
+        firstParticleX =
+            screen.left + (gap / 2)
+
         x =
-            (screen.width * (toFloat i + 0.5) / toFloat total) + screen.left
+            firstParticleX + (toFloat i * gap)
     in
     { position = ( x, screen.top + 30 ), velocity = ( 0, 0 ), mass = mass }
 
@@ -100,15 +106,15 @@ checkEdges p =
             p.velocity
 
         s =
-            --shrinkScreenByRadius (particleRadius p) screen
-            screen
+            --screen
+            shrinkScreenByRadius (particleRadius p) screen
 
         nvy =
             if
                 y > s.bottom
                 --&& vy > 0
             then
-                vy * -1
+                vy * -0.9
 
             else
                 vy
@@ -120,21 +126,40 @@ atMost =
     min
 
 
+particleAcceleration : Particle -> Vec
 particleAcceleration p =
     let
         gravity =
-            ( 0, 0.5 )
+            ( 0, 0.1 )
+
+        ( _, y ) =
+            p.position
+
+        drag =
+            if y + particleRadius p > 0 then
+                p.velocity
+                    |> toPolar
+                    |> Tuple.mapFirst (\mag -> mag * mag * -0.1)
+                    |> fromPolar
+                    |> vecScale p.mass
+
+            else
+                ( 0, 0 )
     in
-    vecAdd ( 0, 0 ) gravity
+    vecAdd drag gravity
 
 
 view : Model -> Html Msg
 view model =
     svg []
-        [ circle 20 [ fill "#fff" ]
-        , model.particles
+        [ model.particles
             |> List.map viewParticle
             |> Svg.g []
+        , rect ( screen.width, screen.height / 2 )
+            [ translate ( 0, screen.height / 4 )
+            , fill "#555"
+            , style "opacity" "0.5"
+            ]
         ]
 
 
