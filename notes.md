@@ -1,3 +1,10 @@
+# Current Targets: DT 2nd Dec`24
+* 5 examples remaining in Ch2: Forces. Target 6 days.
+* Start: 2nd Dec`24
+* Target: 8th Dec`24
+
+
+# Archived
 * started working on 1.8 Motion 101 (Velocity and Constant Acceleration)
 * scraped all example number and title from website using following snippet. And stored it noc-data.json.
 
