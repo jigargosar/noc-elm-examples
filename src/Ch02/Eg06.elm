@@ -94,6 +94,7 @@ update msg model =
             ( { model
                 | particles = List.map updateParticle model.particles
                 , mouse = mouseClick False model.mouse
+                , attractor = updateAttractor model.mouse model.attractor
               }
             , Cmd.none
             )
@@ -106,6 +107,14 @@ update msg model =
 
         MouseMove _ x y ->
             ( { model | mouse = mouseMove ( x + screen.left, y + screen.top ) model.mouse }, Cmd.none )
+
+
+updateAttractor mouse attractor =
+    if mouse.down then
+        { attractor | position = mouse.position }
+
+    else
+        attractor
 
 
 updateParticle p =
@@ -206,6 +215,7 @@ viewSvg model =
             , fill "#555"
             , stroke "#fff"
             , SA.strokeWidth "4"
+            , translate attractor.position
             ]
         ]
 
