@@ -67,7 +67,7 @@ type alias Particle =
 
 init : () -> ( Model, Cmd msg )
 init () =
-    ( { particles = [ { position = ( 50, 50 ), velocity = ( 0, 0 ), mass = 2 } ]
+    ( { particles = [ { position = ( 50, -50 ), velocity = ( 2, 2 ), mass = 2 } ]
       , attractor = { position = ( 0, 0 ), mass = 20 }
       , mouse = Mouse ( 0, 0 ) False False
       }
@@ -92,7 +92,7 @@ update msg model =
     case msg of
         Tick ->
             ( { model
-                | particles = List.map updateParticle model.particles
+                | particles = List.map (updateParticle model.attractor) model.particles
                 , mouse = mouseClick False model.mouse
                 , attractor = updateAttractor model.mouse model.attractor
               }
@@ -117,16 +117,51 @@ updateAttractor mouse attractor =
         attractor
 
 
-updateParticle p =
+updateParticle a p =
     let
         velocity =
-            vecAdd p.velocity (particleAcceleration p)
+            vecAdd p.velocity (particleAcceleration a p)
     in
     { p
         | velocity = velocity
         , position = vecAdd p.position velocity
     }
-        |> checkEdges
+
+
+attractorForceOnParticle : Particle -> Attractor -> Vec
+attractorForceOnParticle particle attractor =
+    let
+        force =
+            vecSub attractor.position particle.position
+
+        distance =
+            force
+                |> toPolar
+                |> Tuple.first
+                |> clamp 5 15
+
+        gravitationalConstant =
+            1
+
+        strength =
+            (gravitationalConstant * attractor.mass * particle.mass)
+                / (distance * distance)
+    in
+    force
+        |> vecSetMag strength
+
+
+particleAcceleration : Attractor -> Particle -> Vec
+particleAcceleration a p =
+    attractorForceOnParticle p a
+        |> vecScale (1 / p.mass)
+
+
+vecSetMag m v =
+    v
+        |> toPolar
+        |> Tuple.mapFirst (always m)
+        |> fromPolar
 
 
 checkEdges p =
@@ -158,38 +193,8 @@ atMost =
     min
 
 
-particleAcceleration : Particle -> Vec
-particleAcceleration p =
-    let
-        gravity =
-            ( 0, 0.1 )
-
-        ( _, y ) =
-            p.position
-
-        drag =
-            if y + particleRadius p > 0 then
-                p.velocity
-                    |> toPolar
-                    |> Tuple.mapFirst (\mag -> mag * mag * -0.1)
-                    |> fromPolar
-                    |> vecScale (1 / p.mass)
-
-            else
-                ( 0, 0 )
-    in
-    vecAdd drag gravity
-
-
+view : Model -> Html Msg
 view model =
-    div []
-        [ viewSvg model
-        , div [] [ text (Debug.toString model.mouse) ]
-        ]
-
-
-viewSvg : Model -> Html Msg
-viewSvg model =
     let
         attractor =
             model.attractor
@@ -209,7 +214,6 @@ viewSvg model =
         [ model.particles
             |> List.map viewParticle
             |> Svg.g []
-            |> always (text "")
         , circle (attractorRadius attractor)
             [ SA.id "circle"
             , fill "#555"
