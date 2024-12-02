@@ -114,6 +114,10 @@ stroke =
     style "stroke"
 
 
+scale s =
+    style "scale" (String.fromFloat s)
+
+
 rect ( w, h ) attrs =
     Svg.rect
         (SA.x (String.fromFloat (-w / 2))
@@ -133,6 +137,14 @@ add =
     (+)
 
 
+atMost =
+    min
+
+
+atLeast =
+    max
+
+
 type alias Vec =
     ( Float, Float )
 
@@ -145,6 +157,10 @@ vecAdd =
     map2 (+)
 
 
+vecSetMag m ( x, y ) =
+    ( m, atan2 y x ) |> fromPolar
+
+
 map2 fn ( a, b ) ( c, d ) =
     ( fn a c, fn b d )
 
@@ -153,9 +169,9 @@ vecScale s =
     tupleMap (mul s)
 
 
+vecDiv s =
+    vecScale (1 / s)
+
+
 tupleMap fn =
     Tuple.mapBoth fn fn
-
-
-scale s =
-    style "scale" (String.fromFloat s)

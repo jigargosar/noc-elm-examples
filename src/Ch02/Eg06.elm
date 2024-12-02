@@ -154,14 +154,7 @@ attractorForceOnParticle particle attractor =
 particleAcceleration : Attractor -> Particle -> Vec
 particleAcceleration a p =
     attractorForceOnParticle p a
-        |> vecScale (1 / p.mass)
-
-
-vecSetMag m v =
-    v
-        |> toPolar
-        |> Tuple.mapFirst (always m)
-        |> fromPolar
+        |> vecDiv p.mass
 
 
 checkEdges p =
@@ -187,10 +180,6 @@ checkEdges p =
                 vy
     in
     { p | position = ( x, y |> atMost s.bottom ), velocity = ( vx, nvy ) }
-
-
-atMost =
-    min
 
 
 view : Model -> Html Msg
