@@ -3,10 +3,11 @@ module Ch02.Eg05 exposing (..)
 import Browser
 import Html exposing (Html)
 import Html.Attributes exposing (style)
-import Random
+import Random exposing (Generator, Seed)
 import Random.Extra
 import Svg exposing (text)
 import Svg.Attributes as SA
+import Svg.Events as SE
 import Time
 import Utils exposing (..)
 
@@ -22,7 +23,9 @@ main =
 
 
 type alias Model =
-    { particles : List Particle }
+    { particles : List Particle
+    , seed : Seed
+    }
 
 
 type alias Particle =
@@ -58,19 +61,25 @@ randomParticles total =
         |> Random.Extra.combine
 
 
+randomResetParticles : Generator (List Particle)
+randomResetParticles =
+    randomParticles 10
+
+
 init : () -> ( Model, Cmd msg )
 init () =
     let
         ( particles, seed ) =
-            Random.step (randomParticles 10) (Random.initialSeed 0)
+            Random.step randomResetParticles (Random.initialSeed 0)
     in
-    ( { particles = particles }
+    ( { particles = particles, seed = seed }
     , Cmd.none
     )
 
 
 type Msg
     = Tick
+    | Reset
 
 
 subscriptions : Model -> Sub Msg
@@ -83,6 +92,13 @@ update msg model =
     case msg of
         Tick ->
             ( { model | particles = List.map updateParticle model.particles }, Cmd.none )
+
+        Reset ->
+            let
+                ( particles, seed ) =
+                    Random.step randomResetParticles model.seed
+            in
+            ( { model | particles = particles, seed = seed }, Cmd.none )
 
 
 updateParticle p =
@@ -151,7 +167,7 @@ particleAcceleration p =
 
 view : Model -> Html Msg
 view model =
-    svg []
+    svg [ SE.onClick Reset ]
         [ model.particles
             |> List.map viewParticle
             |> Svg.g []
