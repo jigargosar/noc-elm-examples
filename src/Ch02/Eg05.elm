@@ -141,7 +141,7 @@ particleAcceleration p =
                     |> toPolar
                     |> Tuple.mapFirst (\mag -> mag * mag * -0.1)
                     |> fromPolar
-                    |> vecScale p.mass
+                    |> vecScale (1 / p.mass)
 
             else
                 ( 0, 0 )
