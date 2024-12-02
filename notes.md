@@ -3,6 +3,9 @@
 * Start: 2nd Dec`24
 * Target: 8th Dec`24
 
+Overall pending target is 9 chapters with (max) 15 examples each. At max the project should finish in 5 months, i.e. 150 days. This is month of december, so project should finish, at max, in April. Keeping current target to end of March.
+
+December target is 25 examples.
 
 # Archived
 * started working on 1.8 Motion 101 (Velocity and Constant Acceleration)
