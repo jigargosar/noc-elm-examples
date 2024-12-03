@@ -3,7 +3,9 @@
 * 2.6 done on 2nd
 * 2.7 started on 3rd
 * 2.8
-* 2.9
+* 2.9 completed on 3rd
+
+we have time till 8th, either we move forward with 3rd chapter, or work on generating index page. With simple styling. Let's give it some thought, and come up with a simple plan. Get a mockup ui ready, perhaps cloning the examples page of NOC.
 # Current Targets: DT 2nd Dec`24
 * 5 examples remaining in Ch2: Forces. Target 6 days.
 * Start: 2nd Dec`24
