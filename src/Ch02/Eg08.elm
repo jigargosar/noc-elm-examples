@@ -46,15 +46,9 @@ mouseMove position mouse =
 
 
 type alias Model =
-    { particles : List Particle
-    , attractor : Attractor
+    { particleA : Particle
+    , particleB : Particle
     , mouse : Mouse
-    }
-
-
-type alias Attractor =
-    { position : Vec
-    , mass : Float
     }
 
 
@@ -69,36 +63,10 @@ screen =
     Utils.screen
 
 
-randomParticles =
-    let
-        randomPosition =
-            Random.pair (Random.float screen.left screen.right)
-                (Random.float screen.top screen.bottom)
-
-        randomMass =
-            Random.float 0.5 3
-
-        initParticle position mass =
-            { position = position, velocity = ( 1, 0 ), mass = mass }
-
-        randomParticle =
-            Random.map2 initParticle
-                randomPosition
-                randomMass
-    in
-    Random.list 10 randomParticle
-
-
 init : () -> ( Model, Cmd msg )
 init () =
-    let
-        ( particles, seed ) =
-            Random.step randomParticles (Random.initialSeed 0)
-    in
-    ( { particles = particles
-
-      --particles = [ { position = ( 50, -50 ), velocity = ( 2, 2 ), mass = 2 } ]
-      , attractor = { position = ( 0, 0 ), mass = 20 }
+    ( { particleA = Particle ( 320, 40 ) ( 1, 0 ) 8
+      , particleB = Particle ( 320, 200 ) ( -1, 0 ) 8
       , mouse = Mouse ( 0, 0 ) False False
       }
     , Cmd.none
@@ -122,9 +90,7 @@ update msg model =
     case msg of
         Tick ->
             ( { model
-                | particles = List.map (updateParticle model.attractor) model.particles
-                , mouse = mouseClick False model.mouse
-                , attractor = updateAttractor model.mouse model.attractor
+                | mouse = mouseClick False model.mouse
               }
             , Cmd.none
             )
@@ -139,14 +105,6 @@ update msg model =
             ( { model | mouse = mouseMove ( x + screen.left, y + screen.top ) model.mouse }, Cmd.none )
 
 
-updateAttractor mouse attractor =
-    if mouse.down then
-        { attractor | position = mouse.position }
-
-    else
-        attractor
-
-
 updateParticle a p =
     let
         velocity =
@@ -158,41 +116,43 @@ updateParticle a p =
     }
 
 
-attractorForceOnParticle : Particle -> Attractor -> Vec
-attractorForceOnParticle particle attractor =
-    let
-        force =
-            vecSub attractor.position particle.position
-
-        distance =
-            force
-                |> toPolar
-                |> Tuple.first
-                |> clamp 5 25
-
-        gravitationalConstant =
-            1
-
-        strength =
-            (gravitationalConstant * attractor.mass * particle.mass)
-                / (distance * distance)
-    in
-    force
-        |> vecSetMag strength
+particleAcceleration _ _ =
+    ( 0, 0 )
 
 
-particleAcceleration : Attractor -> Particle -> Vec
-particleAcceleration a p =
-    attractorForceOnParticle p a
-        |> vecDiv p.mass
+
+--attractorForceOnParticle : Particle -> Attractor -> Vec
+--attractorForceOnParticle particle attractor =
+--    let
+--        force =
+--            vecSub attractor.position particle.position
+--
+--        distance =
+--            force
+--                |> toPolar
+--                |> Tuple.first
+--                |> clamp 5 25
+--
+--        gravitationalConstant =
+--            1
+--
+--        strength =
+--            (gravitationalConstant * attractor.mass * particle.mass)
+--                / (distance * distance)
+--    in
+--    force
+--        |> vecSetMag strength
+--
+--
+--particleAcceleration : Attractor -> Particle -> Vec
+--particleAcceleration a p =
+--    attractorForceOnParticle p a
+--        |> vecDiv p.mass
+--
 
 
 view : Model -> Html Msg
 view model =
-    let
-        attractor =
-            model.attractor
-    in
     svg
         [ SE.onMouseDown (MouseButton True)
         , SE.onMouseUp (MouseButton False)
@@ -205,25 +165,13 @@ view model =
             )
         , SA.id "svg"
         ]
-        [ model.particles
-            |> List.map viewParticle
-            |> Svg.g []
-        , circle (attractorRadius attractor)
-            [ SA.id "circle"
-            , fill "#555"
-            , stroke "#fff"
-            , SA.strokeWidth "4"
-            , translate attractor.position
-            ]
+        [ viewParticle model.particleA
+        , viewParticle model.particleB
         ]
 
 
-attractorRadius a =
-    a.mass
-
-
 particleRadius p =
-    p.mass * 8
+    sqrt p.mass * 2
 
 
 viewParticle p =
