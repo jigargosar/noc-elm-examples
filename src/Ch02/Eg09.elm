@@ -4,6 +4,7 @@ import Browser
 import Html exposing (Html, div)
 import Html.Attributes exposing (style)
 import Json.Decode as JD
+import List.Extra
 import Random exposing (Generator, Seed)
 import Random.Extra
 import Svg exposing (text)
@@ -46,8 +47,7 @@ mouseMove position mouse =
 
 
 type alias Model =
-    { particleA : Particle
-    , particleB : Particle
+    { particles : List Particle
     , mouse : Mouse
     }
 
@@ -63,10 +63,33 @@ screen =
     Utils.screen
 
 
+randomParticles =
+    let
+        randomPosition =
+            Random.pair (Random.float screen.left screen.right)
+                (Random.float screen.top screen.bottom)
+
+        randomMass =
+            Random.float 0.1 2
+
+        initParticle position mass =
+            { position = position, velocity = ( 0, 0 ), mass = mass }
+
+        randomParticle =
+            Random.map2 initParticle
+                randomPosition
+                randomMass
+    in
+    Random.list 10 randomParticle
+
+
 init : () -> ( Model, Cmd msg )
 init () =
-    ( { particleA = Particle ( screen.left + 320, screen.top + 40 ) ( 1, 0 ) 8
-      , particleB = Particle ( screen.left + 320, screen.top + 200 ) ( -1, 0 ) 8
+    let
+        ( particles, seed ) =
+            Random.step randomParticles (Random.initialSeed 0)
+    in
+    ( { particles = particles
       , mouse = Mouse ( 0, 0 ) False False
       }
     , Cmd.none
@@ -91,8 +114,9 @@ update msg model =
         Tick ->
             ( { model
                 | mouse = mouseClick False model.mouse
-                , particleA = updateParticle model.particleB model.particleA
-                , particleB = updateParticle model.particleA model.particleB
+                , particles =
+                    List.Extra.select model.particles
+                        |> List.map (\( particle, attractors ) -> updateParticle attractors particle)
               }
             , Cmd.none
             )
@@ -107,10 +131,20 @@ update msg model =
             ( { model | mouse = mouseMove ( x + screen.left, y + screen.top ) model.mouse }, Cmd.none )
 
 
-updateParticle a p =
+updateParticle : List Particle -> Particle -> Particle
+updateParticle attractors p =
     let
+        cumulativeAcceleration =
+            List.foldl
+                (\attractor acc ->
+                    particleAcceleration attractor p
+                        |> vecAdd acc
+                )
+                ( 0, 0 )
+                attractors
+
         velocity =
-            vecAdd p.velocity (particleAcceleration a p)
+            vecAdd p.velocity cumulativeAcceleration
     in
     { p
         | velocity = velocity
@@ -161,13 +195,11 @@ view model =
             )
         , SA.id "svg"
         ]
-        [ viewParticle model.particleA
-        , viewParticle model.particleB
-        ]
+        (model.particles |> List.map viewParticle)
 
 
 particleRadius p =
-    (sqrt p.mass * 2) * 2
+    p.mass * 8
 
 
 viewParticle p =
