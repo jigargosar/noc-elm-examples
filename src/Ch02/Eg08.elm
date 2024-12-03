@@ -65,8 +65,8 @@ screen =
 
 init : () -> ( Model, Cmd msg )
 init () =
-    ( { particleA = Particle ( 320, 40 ) ( 1, 0 ) 8
-      , particleB = Particle ( 320, 200 ) ( -1, 0 ) 8
+    ( { particleA = Particle ( screen.left + 320, screen.top + 40 ) ( 1, 0 ) 8
+      , particleB = Particle ( screen.left + 320, screen.top + 200 ) ( -1, 0 ) 8
       , mouse = Mouse ( 0, 0 ) False False
       }
     , Cmd.none
@@ -91,6 +91,8 @@ update msg model =
         Tick ->
             ( { model
                 | mouse = mouseClick False model.mouse
+                , particleA = updateParticle model.particleB model.particleA
+                , particleB = updateParticle model.particleA model.particleB
               }
             , Cmd.none
             )
@@ -116,39 +118,33 @@ updateParticle a p =
     }
 
 
-particleAcceleration _ _ =
-    ( 0, 0 )
+attractorForceOnParticle : Particle -> Particle -> Vec
+attractorForceOnParticle particle attractor =
+    let
+        force =
+            vecSub attractor.position particle.position
+
+        distance =
+            force
+                |> toPolar
+                |> Tuple.first
+                |> clamp 5 25
+
+        gravitationalConstant =
+            1
+
+        strength =
+            (gravitationalConstant * attractor.mass * particle.mass)
+                / (distance * distance)
+    in
+    force
+        |> vecSetMag strength
 
 
-
---attractorForceOnParticle : Particle -> Attractor -> Vec
---attractorForceOnParticle particle attractor =
---    let
---        force =
---            vecSub attractor.position particle.position
---
---        distance =
---            force
---                |> toPolar
---                |> Tuple.first
---                |> clamp 5 25
---
---        gravitationalConstant =
---            1
---
---        strength =
---            (gravitationalConstant * attractor.mass * particle.mass)
---                / (distance * distance)
---    in
---    force
---        |> vecSetMag strength
---
---
---particleAcceleration : Attractor -> Particle -> Vec
---particleAcceleration a p =
---    attractorForceOnParticle p a
---        |> vecDiv p.mass
---
+particleAcceleration : Particle -> Particle -> Vec
+particleAcceleration a p =
+    attractorForceOnParticle p a
+        |> vecDiv p.mass
 
 
 view : Model -> Html Msg
@@ -171,7 +167,7 @@ view model =
 
 
 particleRadius p =
-    sqrt p.mass * 2
+    (sqrt p.mass * 2) * 2
 
 
 viewParticle p =
