@@ -1,4 +1,4 @@
-module Experiments.Ex03_01 exposing (..)
+module Experiments.Ex03_01 exposing (main)
 
 import Browser
 import Html exposing (Html)

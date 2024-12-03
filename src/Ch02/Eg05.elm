@@ -1,4 +1,4 @@
-module Ch02.Eg05 exposing (..)
+module Ch02.Eg05 exposing (main)
 
 import Browser
 import Html exposing (Html)
