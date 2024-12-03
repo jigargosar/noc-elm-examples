@@ -3,10 +3,12 @@ module ParticleEffects.ColoredParticles exposing (main)
 import Browser
 import Html exposing (Html)
 import Html.Attributes exposing (style)
+import List.Extra
 import Random exposing (Generator, Seed)
-import Svg
+import Svg exposing (Attribute)
 import Svg.Attributes as SA
 import Time
+import Utils exposing (tupleMap, vecSub)
 
 
 type alias Screen =
@@ -161,10 +163,10 @@ randomParticle : Screen -> Generator Particle
 randomParticle screen =
     let
         randomRadius =
-            Random.float 5 40
+            Random.float 5 15
 
         randomVelocity =
-            Random.pair (Random.float -1 1) (Random.float -1 1)
+            Random.pair (Random.float -0.5 0.5) (Random.float -0.5 0.5)
 
         randomPosition radius =
             randomPointInScreen (shrinkScreenByRadius radius screen)
@@ -210,10 +212,56 @@ view model =
                 ]
             ]
         , model.particles
+            |> List.Extra.selectSplit
+            |> List.concatMap (\( _, p, rest ) -> viewParticleConnections p rest)
+            |> group []
+        , model.particles
             |> List.map (viewParticle screen)
             |> group []
         , Svg.circle [ SA.r "5", SA.fill "dodgerblue" ] []
         ]
+
+
+viewConnection : ( Vec, Vec ) -> Html Msg
+viewConnection ( a, b ) =
+    Svg.polyline [ [ a, b ] |> attrPoints, SA.stroke "#fff", style "opacity" "0.5" ]
+        []
+
+
+attrPoints : List Vec -> Attribute Msg
+attrPoints list =
+    list
+        |> List.map
+            (\( x, y ) ->
+                [ x, y ]
+                    |> List.map String.fromFloat
+                    |> String.join ","
+            )
+        |> String.join " "
+        |> SA.points
+
+
+viewParticleConnections : Particle -> List Particle -> List (Html Msg)
+viewParticleConnections p ps =
+    ps
+        |> List.filterMap
+            (\p_ ->
+                let
+                    distance =
+                        vecDistanceFromTo p.position p_.position
+                in
+                if distance < 60 then
+                    Just (viewConnection ( p.position, p_.position ))
+
+                else
+                    Nothing
+            )
+
+
+vecDistanceFromTo a b =
+    vecSub b a
+        |> toPolar
+        |> Tuple.first
 
 
 group =
