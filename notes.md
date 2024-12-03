@@ -1,3 +1,9 @@
+# Checklist
+* target date 8th 
+* 2.6 done on 2nd
+* 2.7 started on 3rd
+* 2.8
+* 2.9
 # Current Targets: DT 2nd Dec`24
 * 5 examples remaining in Ch2: Forces. Target 6 days.
 * Start: 2nd Dec`24
