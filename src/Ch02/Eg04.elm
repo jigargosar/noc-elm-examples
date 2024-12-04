@@ -1,4 +1,4 @@
-module Example_2_2 exposing (main)
+module Ch02.Eg04 exposing (main)
 
 import Browser
 import Browser.Events
@@ -41,6 +41,34 @@ screen =
     }
 
 
+initScreen : Float -> Float -> Screen
+initScreen w h =
+    { width = w
+    , height = h
+    , left = -w / 2
+    , right = w / 2
+    , top = -h / 2
+    , bottom = h / 2
+    }
+
+
+expandScreenByRadius : Float -> Screen -> Screen
+expandScreenByRadius radius s =
+    let
+        diameter =
+            radius * 2
+
+        ( w, h ) =
+            ( s.width + diameter, s.height + diameter )
+    in
+    initScreen w h
+
+
+shrinkScreenByRadius : Float -> Screen -> Screen
+shrinkScreenByRadius radius s =
+    expandScreenByRadius -radius s
+
+
 main =
     Browser.element
         { init = init
@@ -74,8 +102,7 @@ init : () -> ( Model, Cmd Msg )
 init () =
     ( { ticks = 0
       , particles =
-            [ Particle ( screen.left + screen.width * 1 / 3, screen.top + 30 ) ( 0, 0 ) 10
-            , Particle ( screen.left + screen.width * 2 / 3, screen.top + 30 ) ( 0, 0 ) 2
+            [ Particle ( 0, screen.top + 30 ) ( 0, 0 ) 5
             ]
       , mouse = ( 0, 0 )
       , mouseDown = False
@@ -117,49 +144,44 @@ update msg model =
             )
 
 
-
---updateParticle mouseDown p =
---    -- this function caused gain in momentum
---    { p
---        | position = vecAdd p.position p.velocity
---        , velocity = vecAdd p.velocity (acceleration_ p.mass mouseDown)
---    }
---        |> bounceWithinScreen screen
-
-
 updateParticle : Bool -> Particle -> Particle
-updateParticle mouseDown p =
-    --this function causes loss of momentum
+updateParticle mouseDown p_ =
     let
+        p =
+            p_ |> bounceWithinScreen screen
+
         newVelocity =
-            vecAdd p.velocity (acceleration_ p.mass mouseDown)
+            vecAdd p.velocity (acceleration_ mouseDown screen p)
     in
     { p
         | velocity = newVelocity
         , position = vecAdd p.position newVelocity
     }
-        |> bounceWithinScreen screen
 
 
-bounceWithinScreen s p =
+bounceWithinScreen : Screen -> Particle -> Particle
+bounceWithinScreen s_ p =
     let
+        s =
+            shrinkScreenByRadius (particleRadius p) s_
+
         ( x, y ) =
             p.position
 
         ( dx, dy ) =
             p.velocity
 
+        bounce =
+            -0.9
+
         newVelocity =
             ( if (x < s.left && dx < 0) || (x > s.right && dx > 0) then
-                -dx
+                dx * bounce
 
               else
                 dx
-            , if
-                --(y < s.top && dy < 0) ||
-                y > s.bottom && dy > 0
-              then
-                -dy
+            , if y > s.bottom && dy > 0 then
+                dy * bounce
 
               else
                 dy
@@ -175,20 +197,46 @@ atMost =
     min
 
 
-acceleration_ mass isWindy =
+acceleration_ isWindy s_ p =
     let
+        s =
+            shrinkScreenByRadius (particleRadius p) s_
+
+        ( _, y ) =
+            p.position
+
+        friction =
+            --The particle is touching the edge when it's within one pixel
+            if y > s.bottom - 1 then
+                let
+                    coefficient =
+                        0.1
+                in
+                vecScale -1 p.velocity
+                    |> vecSetMag coefficient
+
+            else
+                ( 0, 0 )
+
         gravity =
-            ( 0, 0.1 )
+            ( 0, 1 )
 
         windForce =
             if isWindy then
-                ( 0.1, 0 )
+                ( 0.5, 0 )
 
             else
                 ( 0, 0 )
     in
-    vecAdd windForce gravity
-        |> vecScale (1 / mass)
+    vecAdd
+        (windForce |> vecScale (1 / p.mass))
+        (gravity |> vecScale (1 / p.mass))
+        |> vecAdd
+            (friction |> vecScale (1 / p.mass))
+
+
+vecSetMag m v =
+    v |> toPolar |> Tuple.mapFirst (always m) |> fromPolar
 
 
 view : Model -> Html Msg

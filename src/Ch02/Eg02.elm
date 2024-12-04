@@ -1,4 +1,4 @@
-module Example_2_3 exposing (main)
+module Ch02.Eg02 exposing (main)
 
 import Browser
 import Browser.Events
@@ -39,34 +39,6 @@ screen =
     , top = -h / 2
     , bottom = h / 2
     }
-
-
-initScreen : Float -> Float -> Screen
-initScreen w h =
-    { width = w
-    , height = h
-    , left = -w / 2
-    , right = w / 2
-    , top = -h / 2
-    , bottom = h / 2
-    }
-
-
-expandScreenByRadius : Float -> Screen -> Screen
-expandScreenByRadius radius s =
-    let
-        diameter =
-            radius * 2
-
-        ( w, h ) =
-            ( s.width + diameter, s.height + diameter )
-    in
-    initScreen w h
-
-
-shrinkScreenByRadius : Float -> Screen -> Screen
-shrinkScreenByRadius radius s =
-    expandScreenByRadius -radius s
 
 
 main =
@@ -169,13 +141,8 @@ updateParticle mouseDown p =
         |> bounceWithinScreen screen
 
 
-bounceWithinScreen : Screen -> Particle -> Particle
-bounceWithinScreen s_ p =
+bounceWithinScreen s p =
     let
-        s =
-            shrinkScreenByRadius (particleRadius p) s_
-                |> always s_
-
         ( x, y ) =
             p.position
 
@@ -189,8 +156,7 @@ bounceWithinScreen s_ p =
               else
                 dx
             , if
-                --(y < s.top && dy < 0)
-                --    ||
+                --(y < s.top && dy < 0) ||
                 y > s.bottom && dy > 0
               then
                 -dy
@@ -212,7 +178,7 @@ atMost =
 acceleration_ mass isWindy =
     let
         gravity =
-            ( 0, 1 )
+            ( 0, 0.1 )
 
         windForce =
             if isWindy then
@@ -220,11 +186,9 @@ acceleration_ mass isWindy =
 
             else
                 ( 0, 0 )
-
-        scaledWindForce =
-            windForce |> vecScale (1 / mass)
     in
-    vecAdd scaledWindForce gravity
+    vecAdd windForce gravity
+        |> vecScale (1 / mass)
 
 
 view : Model -> Html Msg

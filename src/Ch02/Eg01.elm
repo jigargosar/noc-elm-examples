@@ -1,4 +1,4 @@
-module Example_2_1 exposing (main)
+module Ch02.Eg01 exposing (main)
 
 import Browser
 import Browser.Events
