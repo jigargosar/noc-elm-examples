@@ -83,6 +83,24 @@ circle r attrs =
     Svg.circle (SA.r (String.fromFloat r) :: attrs) []
 
 
+polyline pts attrs =
+    let
+        stringPts =
+            pts
+                |> List.map (\( x, y ) -> String.fromFloat x ++ "," ++ String.fromFloat y)
+                |> String.join " "
+    in
+    Svg.polyline (SA.points stringPts :: attrs) []
+
+
+strokeWidth a =
+    style "strokeWidth" (String.fromFloat a ++ "px")
+
+
+rotate a =
+    style "rotate" (String.fromFloat a ++ "rad")
+
+
 translate ( x, y ) =
     style "translate" (px x ++ " " ++ px y)
 
