@@ -8,7 +8,7 @@ import Random exposing (Generator, Seed)
 import Svg exposing (Attribute)
 import Svg.Attributes as SA
 import Time
-import Utils exposing (tupleMap, vecSub)
+import Utils exposing (..)
 
 
 type alias Screen =
@@ -250,7 +250,7 @@ viewParticleConnections p ps =
                     distance =
                         vecDistanceFromTo p.position p_.position
                 in
-                if distance < 60 then
+                if distance < 100 then
                     Just (viewConnection ( p.position, p_.position ))
 
                 else
@@ -258,10 +258,21 @@ viewParticleConnections p ps =
             )
 
 
-vecDistanceFromTo a b =
+vecFromTo a b =
     vecSub b a
-        |> toPolar
-        |> Tuple.first
+
+
+vecLengthSquared ( x, y ) =
+    add (mul x x) (mul y y)
+
+
+vecLength v =
+    vecLengthSquared v |> sqrt
+
+
+vecDistanceFromTo a b =
+    vecFromTo a b
+        |> vecLength
 
 
 group =
