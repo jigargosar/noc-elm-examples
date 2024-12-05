@@ -62,6 +62,8 @@ type alias Attractor =
 type alias Particle =
     { position : Vec
     , velocity : Vec
+    , angle : Float
+    , angularVelocity : Float
     , mass : Float
     }
 
@@ -80,7 +82,12 @@ randomParticles =
             Random.float 0.1 2
 
         initParticle position mass =
-            { position = position, velocity = ( 1, 0 ), mass = mass }
+            { position = position
+            , velocity = ( 1, 0 )
+            , mass = mass
+            , angle = 0
+            , angularVelocity = 0
+            }
 
         randomParticle =
             Random.map2 initParticle
@@ -148,12 +155,24 @@ updateAttractor mouse attractor =
 
 updateParticle a p =
     let
+        acceleration =
+            particleAcceleration a p
+
         velocity =
-            vecAdd p.velocity (particleAcceleration a p)
+            vecAdd p.velocity acceleration
+
+        angularAcceleration =
+            (acceleration |> Tuple.first) / 10
+
+        angularVelocity =
+            (p.angularVelocity + angularAcceleration)
+                |> clamp -0.1 0.1
     in
     { p
         | velocity = velocity
         , position = vecAdd p.position velocity
+        , angle = p.angle + angularVelocity
+        , angularVelocity = angularVelocity
     }
 
 
@@ -226,4 +245,7 @@ particleRadius p =
 
 
 viewParticle p =
-    circle (particleRadius p) [ fill "white", translate p.position ]
+    group [ translate p.position, rotate p.angle, fill "#444", stroke "white", strokeWidth 1 ]
+        [ circle (particleRadius p) []
+        , polyline [ ( 0, particleRadius p ), ( 0, 0 ) ] []
+        ]
