@@ -10,6 +10,7 @@ Current Buffer: +6
 
 ## Log
 * Day 1: 4th Dec : eg 3.1: angular motions.
+* Day 2: 5th Dec : Example 3.2: Forces with (arbitrary) angular motion.
 
 ---
 
