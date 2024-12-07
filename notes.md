@@ -12,6 +12,7 @@ Current Buffer: +6
 * Day 1: 4th Dec : eg 3.1: angular motions.
 * Day 2: 5th Dec : Example 3.2: Forces with (arbitrary) angular motion.
 * Day 3: 6th Dec: Example 3.3: Pointing in the Direction of Motion
+* Day 4: 7th Dec: Example 3.4: Polar to Cartesian
 
 ---
 
