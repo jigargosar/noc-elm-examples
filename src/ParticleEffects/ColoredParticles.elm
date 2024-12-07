@@ -218,14 +218,7 @@ view model =
         , model.particles
             |> List.map (viewParticle screen)
             |> group []
-        , Svg.circle [ SA.r "5", SA.fill "dodgerblue" ] []
         ]
-
-
-viewConnection : ( Vec, Vec ) -> Html Msg
-viewConnection ( a, b ) =
-    Svg.polyline [ [ a, b ] |> attrPoints, SA.stroke "#fff", style "opacity" "0.5" ]
-        []
 
 
 attrPoints : List Vec -> Attribute Msg
@@ -242,16 +235,30 @@ attrPoints list =
 
 
 viewParticleConnections : Particle -> List Particle -> List (Html Msg)
-viewParticleConnections p ps =
-    ps
+viewParticleConnections a bs =
+    let
+        maxDistance =
+            100
+
+        renderConnection distance b =
+            Svg.polyline
+                [ [ a, b ]
+                    |> List.map .position
+                    |> attrPoints
+                , SA.stroke "#fff"
+                , style "opacity" (String.fromFloat (1 - (distance / maxDistance)))
+                ]
+                []
+    in
+    bs
         |> List.filterMap
-            (\p_ ->
+            (\b ->
                 let
                     distance =
-                        vecDistanceFromTo p.position p_.position
+                        vecDistanceFromTo a.position b.position
                 in
-                if distance < 100 then
-                    Just (viewConnection ( p.position, p_.position ))
+                if distance < maxDistance then
+                    Just (renderConnection distance b)
 
                 else
                     Nothing
@@ -280,22 +287,16 @@ group =
 
 
 viewParticle : Screen -> Particle -> Html Msg
-viewParticle scr particle =
+viewParticle _ particle =
     let
         ( x, y ) =
             particle.position
-
-        hue =
-            (360 / scr.width) * (x + scr.left)
     in
     circle particle.radius
-        --[ translate ( x, y )
         [ SA.cx (String.fromFloat x)
         , SA.cy (String.fromFloat y)
         , SA.stroke "#000"
         , SA.strokeWidth "1"
-
-        --, SA.fill ("hsl(" ++ String.fromFloat hue ++ "deg 100 50/1)")
         , SA.fill "url(#grad)"
         ]
 

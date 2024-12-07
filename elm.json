@@ -14,9 +14,11 @@
             "elm/random": "1.0.0",
             "elm/svg": "1.0.1",
             "elm/time": "1.0.0",
+            "elm-community/easing-functions": "2.0.0",
             "elm-community/list-extra": "8.7.0",
             "elm-community/random-extra": "3.2.0",
-            "ianmackenzie/elm-float-extra": "1.1.0"
+            "ianmackenzie/elm-float-extra": "1.1.0",
+            "ianmackenzie/elm-interval": "3.1.0"
         },
         "indirect": {
             "elm/url": "1.0.0",
